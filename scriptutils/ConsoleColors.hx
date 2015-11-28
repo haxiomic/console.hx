@@ -23,22 +23,22 @@ abstract ConsoleColors(String){
 	var RESET = '\033[m';
 }
 
-@:publicFields
-private class ColorCodes{
-	static inline var BLACK_CODE = 0;
-	static inline var RED_CODE = 1;
-	static inline var GREEN_CODE = 2;
-	static inline var YELLOW_CODE = 3;
-	static inline var BLUE_CODE = 4;
-	static inline var MAGENTA_CODE = 5;
-	static inline var CYAN_CODE = 6;
-	static inline var WHITE_CODE = 7;
-	static inline var BRIGHT_BLACK_CODE = 8;
-	static inline var BRIGHT_RED_CODE = 9;
-	static inline var BRIGHT_GREEN_CODE = 10;
-	static inline var BRIGHT_YELLOW_CODE = 11;
-	static inline var BRIGHT_BLUE_CODE = 12;
-	static inline var BRIGHT_MAGENTA_CODE = 13;
-	static inline var BRIGHT_CYAN_CODE = 14;
-	static inline var BRIGHT_WHITE_CODE = 15;
+@:enum
+abstract ColorCodes(Int){
+	var BLACK_CODE = 0;
+	var RED_CODE = 1;
+	var GREEN_CODE = 2;
+	var YELLOW_CODE = 3;
+	var BLUE_CODE = 4;
+	var MAGENTA_CODE = 5;
+	var CYAN_CODE = 6;
+	var WHITE_CODE = 7;
+	var BRIGHT_BLACK_CODE = 8;
+	var BRIGHT_RED_CODE = 9;
+	var BRIGHT_GREEN_CODE = 10;
+	var BRIGHT_YELLOW_CODE = 11;
+	var BRIGHT_BLUE_CODE = 12;
+	var BRIGHT_MAGENTA_CODE = 13;
+	var BRIGHT_CYAN_CODE = 14;
+	var BRIGHT_WHITE_CODE = 15;
 }
