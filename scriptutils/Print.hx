@@ -8,9 +8,13 @@ class Print{
 	static var verboseMode:Bool = #if debug true #else false #end;
 	static var singleLineMode:Bool = false;
 
+	static function fatal(s:String){
+		print('${BOLD}${RED}Fatal:${RESET} $s');
+		Sys.exit(1);
+	}
+
 	static function error(s:String){
 		print('${BOLD}${RED}Error:${RESET} $s');
-		Sys.exit(1);
 	}
 
 	static function warn(s:String){
@@ -38,8 +42,8 @@ class Print{
 		if(singleLineMode){
 			//clear line
 			var stdout = Sys.stdout();
-		    stdout.writeString('\033[1K');
-		    stdout.flush();
+			stdout.writeString('\033[1K');
+			stdout.flush();
 			Sys.print('\r');
 
 			Sys.print(s);
