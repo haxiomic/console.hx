@@ -8,6 +8,8 @@ class File{
 	static function createDirectories(path:String){
 		path = Path.directory(path);
 
+		if(path == '') return;
+
 		var p = path.split('/');
 
 		var toCreate = new Array<String>();

@@ -6,10 +6,13 @@ import scriptutils.ConsoleColors;
 class Print{
 
 	static var verboseMode:Bool = #if debug true #else false #end;
+	static var silent:Bool = false;
 	static var singleLineMode:Bool = false;
 
 	static function fatal(s:String){
-		print('${BOLD}${RED}Fatal:${RESET} $s');
+		print('${BOLD}${BRIGHT_RED}Fatal:${RESET} $s');
+		if(singleLineMode)
+			endSingleLineMode();
 		Sys.exit(1);
 	}
 
@@ -39,6 +42,8 @@ class Print{
 	}
 
 	static function print(s:String){
+		if(silent) return;
+
 		if(singleLineMode){
 			//clear line
 			var stdout = Sys.stdout();
