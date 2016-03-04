@@ -1,0 +1,13 @@
+{
+  "name": "scriptutils",
+  "url": "https://github.com/haxiomic/haxe-script-utils",
+  "license": "Public Domain",
+  "tags": [ ],
+  "description": "",
+  "version": "0.0.1",
+  "releasenote": "",
+  "contributors": [""],
+  "dependencies": {
+
+  }
+}
