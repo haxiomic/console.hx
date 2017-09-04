@@ -3,9 +3,10 @@
   "url": "https://github.com/haxiomic/console.hx",
   "license": "MIT",
   "tags": [ "console", "colored", "print", "log" ],
-  "description": "Console.hx is a haxe console and logging utility for easy rich console output on both native and browser consoles",
-  "version": "0.0.2",
-  "releasenote": "Switch to lowercase project name for conformity",
+  "description": "Console.hx is a haxe logging utility for easy rich output in both native and browser consoles",
+  "version": "0.1.2",
+  "classPath": "./src",
+  "releasenote": "Use <tag> syntax instead of cumulative %{custom} syntax",
   "contributors": ["haxiomic"],
   "dependencies": {}
 }

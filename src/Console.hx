@@ -6,34 +6,32 @@ class Console {
 	static public var colorMode = guessConsoleFormatMode();
 
 	@:noCompletion
-	static public var logPrefix = '%{BOLD}%{BLUE}>%{-} ';
+	static public var logPrefix = '<b><blue>></blue></b> ';
 	@:noCompletion
-	static public var warnPrefix = '%{BOLD}%{YELLOW}>%{-} ';
+	static public var warnPrefix = '<b><yellow>></yellow></b> ';
 	@:noCompletion
-	static public var errorPrefix = '%{BOLD}%{RED}>%{-} ';
+	static public var errorPrefix = '<b><red>></red></b> ';
 	@:noCompletion
-	static public var successPrefix = '%{BOLD}%{LIGHT_GREEN}>%{-} ';
+	static public var successPrefix = '<b><light_green>></light_green></b> ';
 	@:noCompletion
-	static public var debugPrefix = '%{BOLD}%{MAGENTA}>%{-} ';
+	static public var debugPrefix = '<b><magenta>></magenta></b> ';
 
 	static var argSeparator = ' ';
-	static var formatPattern = ~/(\\)?%{([^}]*)}/g;
-
 
 	macro static public function log(rest:Array<Expr>){
-		return macro Console.printFormatted(Console.logPrefix + ${joinArgs(rest)} + '%{-}', Log);
+		return macro Console.printFormatted(Console.logPrefix + ${joinArgs(rest)} + '<//>', Log);
 	}
 
 	macro static public function warn(rest:Array<Expr>){
-		return macro Console.printFormatted(Console.warnPrefix + ${joinArgs(rest)} + '%{-}', Warn);
+		return macro Console.printFormatted(Console.warnPrefix + ${joinArgs(rest)} + '<//>', Warn);
 	}
 
 	macro static public function error(rest:Array<Expr>){
-		return macro Console.printFormatted(Console.errorPrefix + ${joinArgs(rest)} + '%{-}', Error);
+		return macro Console.printFormatted(Console.errorPrefix + ${joinArgs(rest)} + '<//>', Error);
 	}
 
 	macro static public function success(rest:Array<Expr>){
-		return macro Console.printFormatted(Console.successPrefix + ${joinArgs(rest)} + '%{-}', Log);
+		return macro Console.printFormatted(Console.successPrefix + ${joinArgs(rest)} + '<//>', Log);
 	}
 
 	// Only generates log call if -debug build flag is supplied
@@ -57,66 +55,51 @@ class Console {
 	}
 
 	/**
-		# Parse and print formatted message to console
+		# Parse formatted message and print to console
+		- HTML-like tags to enable a format flag and disable it: e.g. 
 
-		- Formats are applied cumulatively with the syntax: `%{<format flag>}`
-		- <format flag> is any one of the Console.FormatFlag strings, eg `%{RED}` (case in-sensitive)
-		- Cumulative format is cleared with `%{RESET}`
-		- Format tokens can be escaped with a backslash: `\%{RED}` will print '\%{RED}'
-		- Invalid format flags are ignored (and removed from the string)
-		- Several aliases exist for common formatting flags:
-			- `%{-} => %{RESET}`
-			- `%{!} => %{INVERT}`
-			- `%{_} => %{UNDERLINE}`
-			- `%{*} => %{BOLD}`
-		- There are a few special cases for different console types
-			- Browser consoles:
-				- Hex color codes can be used to set the text color, e.g. `%{#FF0000}`
-				- CSS style fields can be used, e.g. `%{background-color: black; color: white}`
+		  **\<b>bold\</b>** not bold
+		- Whitespace is not allowed in tags, so `<b >` would be ignored and printed as-is
+		- Unknown tags are skipped and will not show up in the output
 	**/
+	static var formatTagPattern = ~/(\\)?<(\/)?([^>\s]*)>/g;
 	public static function printFormatted(s:String, outputStream:ConsoleOutputStream = Log){
+		s = s + '<//>';// Add a reset all to the end to prevent splitting formatting to subsequent lines
+
+		var activeFormatFlagStack = new List<FormatFlag>();
 		var browserFormatArguments = [];
 
-		var result = formatPattern.map(s, function(e){
-			// handle escaped flag \%{...}
+		var result = formatTagPattern.map(s, function(e){
+			// handle escaped flag \<b>
 			if (e.matched(1) != null) return e.matched(0).substring(1);
 
-			var flag:FormatFlag = FormatFlag.fromString(StringTools.trim(e.matched(2)));
+			var flag:FormatFlag = FormatFlag.fromString(e.matched(3));
+			var open = e.matched(2) == null;
+
+			if (flag == RESET) {
+				// clear formating
+				activeFormatFlagStack.clear();
+			} else {
+				if (open) {
+					activeFormatFlagStack.add(flag);
+				} else {
+					activeFormatFlagStack.remove(flag);
+				}
+			}
 
 			switch colorMode {
 				case AsciiTerminal:
-					var asciiFormat = getAsciiFormat(flag);
-					return asciiFormat == null ? '' : asciiFormat;
-
-				case Browser:
-					var browserFormat = getBrowserFormat(flag);
-
-					if (browserFormat != null) {
-						var reset = switch flag {
-							case RESET: true;
-							default: false;
-						}
-
-						if (reset) {
-							browserFormatArguments.push(browserFormat);
-						} else {
-							// combine this format with the previous format
-							var previousFormat = browserFormatArguments[browserFormatArguments.length - 1];
-							var combinedFormat = (previousFormat == null ? '' : previousFormat) + '; ' + browserFormat;
-							browserFormatArguments.push(combinedFormat);
-						}
-
-						return '%c';
-					} else {
-						return '';
-					}
-
-				case Disabled: return '';
+					return getAsciiFormat(RESET) + activeFormatFlagStack.map(function(f) return getAsciiFormat(f)).filter(function(s) return s != null).join('');
+				case BrowserConsole:
+					browserFormatArguments.push(activeFormatFlagStack.map(function(f) return getBrowserFormat(f)).filter(function(s) return s != null).join('; '));
+					return '%c';
+				case Disabled:
+					return '';
 			}
 		});
 
 		#if js
-		if (colorMode == Browser) {
+		if (colorMode == BrowserConsole) {
 			var logArgs = [result].concat(browserFormatArguments);
 			switch outputStream {
 				case Log, Debug: untyped __js__('console.log.apply(console, {0})', logArgs);
@@ -133,7 +116,7 @@ class Console {
 
 	static inline function guessConsoleFormatMode():ConsoleFormatMode {
 		#if js
-		return untyped __typeof__(js.Browser.window) != 'undefined' ? Browser : AsciiTerminal;
+		return untyped __typeof__(js.Browser.window) != 'undefined' ? BrowserConsole : AsciiTerminal;
 		#else
 		return AsciiTerminal;
 		#end
@@ -196,58 +179,50 @@ class Console {
 		case BG_LIGHT_WHITE: '\033[48;5;' + ASCII_LIGHT_WHITE_CODE + 'm';
 	}
 
-	static function getBrowserFormat(name:FormatFlag):Null<String>{
-		if ((name:String).charAt(0) == '#') {
-			return 'color: $name';
-		}
+	static function getBrowserFormat(name:FormatFlag):Null<String> return switch (name) {
+		case RESET: '';
 
-		return switch (name) {
-			case RESET: '';
+		case BOLD: 'font-weight: bold';
+		case DIM: 'color: gray';
+		case UNDERLINE: 'text-decoration: underline';
+		case BLINK: 'text-decoration: blink';
+		case INVERT: '-webkit-filter: invert(100%); filter: invert(100%)'; // not supported
+		case HIDDEN: 'visibility: hidden'; // not supported
 
-			case BOLD: 'font-weight: bold';
-			case DIM: 'color: gray';
-			case UNDERLINE: 'text-decoration: underline';
-			case BLINK: 'text-decoration: blink';
-			case INVERT: '-webkit-filter: invert(100%); filter: invert(100%)'; // not supported
-			case HIDDEN: 'visibility: hidden'; // not supported
+		case BLACK: 'color: black';
+		case RED: 'color: red';
+		case GREEN: 'color: green';
+		case YELLOW: 'color: yellow';
+		case BLUE: 'color: blue';
+		case MAGENTA: 'color: magenta';
+		case CYAN: 'color: cyan';
+		case WHITE: 'color: whiteSmoke';
 
-			case BLACK: 'color: black';
-			case RED: 'color: red';
-			case GREEN: 'color: green';
-			case YELLOW: 'color: yellow';
-			case BLUE: 'color: blue';
-			case MAGENTA: 'color: magenta';
-			case CYAN: 'color: cyan';
-			case WHITE: 'color: whiteSmoke';
+		case LIGHT_BLACK: 'color: gray';
+		case LIGHT_RED: 'color: salmon';
+		case LIGHT_GREEN: 'color: lightGreen';
+		case LIGHT_YELLOW: 'color: lightYellow';
+		case LIGHT_BLUE: 'color: lightBlue';
+		case LIGHT_MAGENTA: 'color: lightPink';
+		case LIGHT_CYAN: 'color: lightCyan';
+		case LIGHT_WHITE: 'color: white';
 
-			case LIGHT_BLACK: 'color: gray';
-			case LIGHT_RED: 'color: salmon';
-			case LIGHT_GREEN: 'color: lightGreen';
-			case LIGHT_YELLOW: 'color: lightYellow';
-			case LIGHT_BLUE: 'color: lightBlue';
-			case LIGHT_MAGENTA: 'color: lightPink';
-			case LIGHT_CYAN: 'color: lightCyan';
-			case LIGHT_WHITE: 'color: white';
-
-			case BG_BLACK: 'background-color: black';
-			case BG_RED: 'background-color: red';
-			case BG_GREEN: 'background-color: green';
-			case BG_YELLOW: 'background-color: yellow';
-			case BG_BLUE: 'background-color: blue';
-			case BG_MAGENTA: 'background-color: magenta';
-			case BG_CYAN: 'background-color: cyan';
-			case BG_WHITE: 'background-color: whiteSmoke';
-			case BG_LIGHT_BLACK: 'background-color: gray';
-			case BG_LIGHT_RED: 'background-color: salmon';
-			case BG_LIGHT_GREEN: 'background-color: lightGreen';
-			case BG_LIGHT_YELLOW: 'background-color: lightYellow';
-			case BG_LIGHT_BLUE: 'background-color: lightBlue';
-			case BG_LIGHT_MAGENTA: 'background-color: lightPink';
-			case BG_LIGHT_CYAN: 'background-color: lightCyan';
-			case BG_LIGHT_WHITE: 'background-color: white';
-
-			default: name;
-		}
+		case BG_BLACK: 'background-color: black';
+		case BG_RED: 'background-color: red';
+		case BG_GREEN: 'background-color: green';
+		case BG_YELLOW: 'background-color: yellow';
+		case BG_BLUE: 'background-color: blue';
+		case BG_MAGENTA: 'background-color: magenta';
+		case BG_CYAN: 'background-color: cyan';
+		case BG_WHITE: 'background-color: whiteSmoke';
+		case BG_LIGHT_BLACK: 'background-color: gray';
+		case BG_LIGHT_RED: 'background-color: salmon';
+		case BG_LIGHT_GREEN: 'background-color: lightGreen';
+		case BG_LIGHT_YELLOW: 'background-color: lightYellow';
+		case BG_LIGHT_BLUE: 'background-color: lightBlue';
+		case BG_LIGHT_MAGENTA: 'background-color: lightPink';
+		case BG_LIGHT_CYAN: 'background-color: lightCyan';
+		case BG_LIGHT_WHITE: 'background-color: white';
 	}
 
 }
@@ -263,7 +238,7 @@ abstract ConsoleOutputStream(Int) {
 @:enum
 abstract ConsoleFormatMode(Int) {
 	var AsciiTerminal = 0;
-	var Browser = 1;
+	var BrowserConsole = 1;
 	var Disabled = 2;
 }
 
@@ -313,10 +288,10 @@ abstract FormatFlag(String) to String {
 	static public inline function fromString(str:String) {
 		// handle aliases
 		return switch str {
-			case '-': RESET;
+			case '/': RESET;
 			case '!': INVERT;
-			case '_': UNDERLINE;
-			case '*': BOLD;
+			case 'u': UNDERLINE;
+			case 'b': BOLD;
 			default: untyped str.toUpperCase();
 		}
 	}
