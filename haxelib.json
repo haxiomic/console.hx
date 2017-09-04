@@ -1,11 +1,11 @@
 {
-  "name": "Console.hx",
+  "name": "console.hx",
   "url": "https://github.com/haxiomic/console.hx",
   "license": "MIT",
   "tags": [ "console", "colored", "print", "log" ],
   "description": "Console.hx is a haxe console and logging utility for easy rich console output on both native and browser consoles",
-  "version": "0.0.1",
-  "releasenote": "",
+  "version": "0.0.2",
+  "releasenote": "Switch to lowercase project name for conformity",
   "contributors": ["haxiomic"],
   "dependencies": {}
 }
