@@ -1,13 +1,11 @@
 {
-  "name": "scriptutils",
-  "url": "https://github.com/haxiomic/haxe-script-utils",
+  "name": "console",
+  "url": "https://github.com/haxiomic/console",
   "license": "Public Domain",
   "tags": [ ],
   "description": "",
   "version": "0.0.1",
   "releasenote": "",
   "contributors": [""],
-  "dependencies": {
-
-  }
+  "dependencies": {}
 }
