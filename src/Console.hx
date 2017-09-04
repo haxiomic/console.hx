@@ -59,14 +59,16 @@ class Console {
 
 	/**
 		# Parse formatted message and print to console
-		- HTML-like tags to enable a format flag and disable it: e.g. 
-
-		  **\<b>bold\</b>** not bold
+		- Apply formatting with HTML-like tags it: _\<b>_**bold**_\</b>_
+		- Tags are case-insensitive
+		- A closing tag without a tag name can be used to close the last-open format tag `</>` so _\<b>_**bold**_\</>_ will also work
+		- A double-closing tag like `<//>` will clear all active formatting
 		- Whitespace is not allowed in tags, so `<b >` would be ignored and printed as-is
+		- Tags can be escaped with a leading backslash: `\<b>` would be printed as-is
 		- Unknown tags are skipped and will not show up in the output
+		- For browser targets, CSS fields and colors can be used, for example: `<{color: red; font-size: 20px}>Inline CSS</>` or `<#FF0000>Red Text</#FF0000>`. These will have no affect on native consoles
 	**/
-	static var formatTagPattern = ~/(\\)?<(\/)?([^>\s]*|{[^>}]*})>/g;
-
+	static var formatTagPattern = ~/(\\)?<(\/)?([^>{}\s]*|{[^>}]*})>/g;
 	public static function printFormatted(s:String, outputStream:ConsoleOutputStream = Log){
 		s = s + '<//>';// Add a reset all to the end to prevent splitting formatting to subsequent lines
 
@@ -195,9 +197,10 @@ class Console {
 		if ((name:String).charAt(0) == '#') {
 			return 'color: $name';
 		}
+
 		// inline CSS
 		if ((name:String).charAt(0) == '{') {
-			// return content but remove braces and convert to lower case
+			// return content as-is but remove enclosing braces
 			return (name:String).substr(1, (name:String).length - 2);
 		}
 
