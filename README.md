@@ -12,18 +12,6 @@ This will print in your console something like:
 
 (Depending on your console color settings). This will also work in a browser console when targeting the web.
 
-### Supported Targets
-
-Formatting should work correctly all haxe targets with a console however here's a list below of which of the notable ones I've verified. Normal linux consoles are expected to work correctly, however, I suspect there will issues with the Windows CMD prompt
-
-|           Target           |        Platform         | Tested |
-| :------------------------: | :---------------------: | :----: |
-|             JS             | Chrome, Firefox, Safari |   ✔    |
-| C++, Neko, PHP, Python, HL |  MacOS - Terminal App   |   ✔    |
-|            C++             |     Windows Console     |   ✘    |
-|            C++             | Linux Common Terminals  |   ✘    |
-|            C++             |         Windows         |   ✘    |
-
 ### Formatting
 
 - Apply formatting with HTML-like tags it: _\<b>_**bold**_\</b>_
@@ -34,7 +22,6 @@ Formatting should work correctly all haxe targets with a console however here's 
 - Tags can be escaped with a leading backslash: `\<b>` would be printed as-is
 - Unknown tags are skipped and will not show up in the output
 - For browser targets, CSS fields and colors can be used, for example: `<{color: red; font-size: 20px}>Inline CSS</>` or `<#FF0000>Red Text</#FF0000>`. These will have no affect on native consoles
-
 
 ### Available Tags
 
@@ -79,3 +66,15 @@ Formatting should work correctly all haxe targets with a console however here's 
 |     `<bg_light_magenta>`     |     Text background light magenta     |
 |      `<bg_light_cyan>`       |      Text background light cyan       |
 |      `<bg_light_white>`      |      Text background light white      |
+
+### Supported Targets
+
+Formatting should work correctly all haxe targets with a console however here's a list below of which of the notable ones I've verified. Normal linux consoles are expected to work correctly, however, I suspect there will issues with the Windows CMD prompt
+
+|           Target           |        Platform         | Tested |
+| :------------------------: | :---------------------: | :----: |
+|             JS             | Chrome, Firefox, Safari |   ✔    |
+| C++, Neko, PHP, Python, HL |  MacOS - Terminal App   |   ✔    |
+|            C++             |     Windows Console     |   ✘    |
+|            C++             | Linux Common Terminals  |   ✘    |
+|            C++             |         Windows         |   ✘    |
