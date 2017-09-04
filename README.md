@@ -20,6 +20,7 @@ Will print in your console something like:
 - Whitespace is not allowed in tags, so `<b >` would be ignored and printed as-is
 - Unknown tags are skipped and will not show up in the output
 - Available tags
+ 
 | Tag Name            | Description                           |
 | ------------------- | ------------------------------------- |
 | \<reset>, \<//>     | Clear all previous formatting         |
