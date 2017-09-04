@@ -1,6 +1,6 @@
 # Console.hx
 
-Console.hx is a haxe console and logging utility for simple and cross-platform rich console output.
+Console.hx is a haxe console and logging utility for simple and cross-platform rich console output
 
 Example:
 ````haxe
