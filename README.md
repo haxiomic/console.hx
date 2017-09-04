@@ -10,11 +10,11 @@ This will print in your console something like:
 
 ![don't-panic](images/don't-panic.png)
 
-(depending on your console color settings). This will also work in a browser console when targeting the web.
+(Depending on your console color settings). This will also work in a browser console when targeting the web.
 
 ### Supported Targets
 
-It should support all haxe targets with a console however here's a list below of which of the notable ones I've verified. Normal linux consoles are expected to work correctly, however, I suspect there will issues with the Windows CMD prompt
+Formatting should work correctly all haxe targets with a console however here's a list below of which of the notable ones I've verified. Normal linux consoles are expected to work correctly, however, I suspect there will issues with the Windows CMD prompt
 
 |           Target           |        Platform         | Tested |
 | :------------------------: | :---------------------: | :----: |
@@ -26,10 +26,12 @@ It should support all haxe targets with a console however here's a list below of
 
 ### Formatting
 
-- HTML-like tags to enable a format flag and disable it: _\<b>_**bold**_\</b>_
+- Apply formatting with HTML-like tags it: _\<b>_**bold**_\</b>_
+- Tags are case-insensitive
 - A closing tag without a tag name can be used to close the last-open format tag `</>` so _\<b>_**bold**_\</>_ will also work
 - A double-closing tag like `<//>` will clear all active formatting
 - Whitespace is not allowed in tags, so `<b >` would be ignored and printed as-is
+- Tags can be escaped with a leading backslash: `\<b>` would be printed as-is
 - Unknown tags are skipped and will not show up in the output
 - For browser targets, CSS fields and colors can be used, for example: `<{color: red; font-size: 20px}>Inline CSS</>` or `<#FF0000>Red Text</#FF0000>`. These will have no affect on native consoles
 
