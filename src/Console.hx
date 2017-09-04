@@ -109,6 +109,7 @@ class Console {
 			}
 		});
 
+		// for browser consoles we need to call console.log with formatting arguments
 		#if js
 		if (colorMode == BrowserConsole) {
 			var logArgs = [result].concat(browserFormatArguments);
@@ -117,12 +118,12 @@ class Console {
 				case Warn: untyped __js__('console.warn.apply(console, {0})', logArgs);
 				case Error: untyped __js__('console.error.apply(console, {0})', logArgs);
 			}
-		} else {
-			print(result, outputStream);
+			return;
 		}
-		#else
-		print(result, outputStream);
 		#end
+
+		// otherwise we can print with inline escape codes
+		print(result, outputStream);
 	}
 
 	static inline function guessConsoleFormatMode():ConsoleFormatMode {
