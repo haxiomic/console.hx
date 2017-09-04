@@ -6,7 +6,7 @@ class Console {
 	static public var colorMode = guessConsoleFormatMode();
 
 	@:noCompletion
-	static public var logPrefix = '<b><blue>></blue></b> ';
+	static public var logPrefix = '<b><gray>></gray></b> ';
 	@:noCompletion
 	static public var warnPrefix = '<b><yellow>></yellow></b> ';
 	@:noCompletion
@@ -19,26 +19,26 @@ class Console {
 	static var argSeparator = ' ';
 
 	macro static public function log(rest:Array<Expr>){
-		return macro Console.printFormatted(Console.logPrefix + ${joinArgs(rest)} + '<//>', Log);
+		return macro Console.printFormatted(Console.logPrefix + ${joinArgs(rest)}, Log);
 	}
 
 	macro static public function warn(rest:Array<Expr>){
-		return macro Console.printFormatted(Console.warnPrefix + ${joinArgs(rest)} + '<//>', Warn);
+		return macro Console.printFormatted(Console.warnPrefix + ${joinArgs(rest)}, Warn);
 	}
 
 	macro static public function error(rest:Array<Expr>){
-		return macro Console.printFormatted(Console.errorPrefix + ${joinArgs(rest)} + '<//>', Error);
+		return macro Console.printFormatted(Console.errorPrefix + ${joinArgs(rest)}, Error);
 	}
 
 	macro static public function success(rest:Array<Expr>){
-		return macro Console.printFormatted(Console.successPrefix + ${joinArgs(rest)} + '<//>', Log);
+		return macro Console.printFormatted(Console.successPrefix + ${joinArgs(rest)}, Log);
 	}
 
 	// Only generates log call if -debug build flag is supplied
 	macro static public function debug(rest:Array<Expr>){
 		if(!Context.getDefines().exists('debug')) return macro null;
 		var pos = Context.currentPos();
-		return macro Console.printFormatted(Console.debugPrefix + '${pos}: ' + ${joinArgs(rest)} + '%{-}', Debug);
+		return macro Console.printFormatted(Console.debugPrefix + '<magenta>${pos}:</magenta> ' + ${joinArgs(rest)}, Debug);
 	}
 
 	static public inline function print(s:String, outputStream:ConsoleOutputStream = Log){
@@ -49,7 +49,10 @@ class Console {
 			case Error: untyped __js__('console.error({0})', s);
 		}
 		#else
-		trace(s);
+		switch outputStream {
+			case Log, Debug, Warn: Sys.stdout().writeString(s + '\n');
+			case Error: Sys.stderr().writeString(s + '\n');
+		}
 		#end
 
 	}
@@ -62,7 +65,8 @@ class Console {
 		- Whitespace is not allowed in tags, so `<b >` would be ignored and printed as-is
 		- Unknown tags are skipped and will not show up in the output
 	**/
-	static var formatTagPattern = ~/(\\)?<(\/)?([^>\s]*)>/g;
+	static var formatTagPattern = ~/(\\)?<(\/)?([^>\s]*|{[^>}]*})>/g;
+
 	public static function printFormatted(s:String, outputStream:ConsoleOutputStream = Log){
 		s = s + '<//>';// Add a reset all to the end to prevent splitting formatting to subsequent lines
 
@@ -83,7 +87,12 @@ class Console {
 				if (open) {
 					activeFormatFlagStack.add(flag);
 				} else {
-					activeFormatFlagStack.remove(flag);
+					if (flag != '') {
+						activeFormatFlagStack.remove(flag);
+					} else {
+						// We've got a shorthand to close the last tag: </>
+						activeFormatFlagStack.remove(activeFormatFlagStack.last());
+					}
 				}
 			}
 
@@ -134,95 +143,109 @@ class Console {
 		return msg;
 	}
 
-	static function getAsciiFormat(name:FormatFlag):Null<String> return switch (name) {
-		case RESET: '\033[m';
+	static function getAsciiFormat(name:FormatFlag):Null<String> {
+		return switch (name) {
+			case RESET: '\033[m';
 
-		case BOLD: '\033[1m';
-		case DIM: '\033[2m';
-		case UNDERLINE: '\033[4m';
-		case BLINK: '\033[5m';
-		case INVERT: '\033[7m';
-		case HIDDEN: '\033[8m';
+			case BOLD: '\033[1m';
+			case DIM: '\033[2m';
+			case UNDERLINE: '\033[4m';
+			case BLINK: '\033[5m';
+			case INVERT: '\033[7m';
+			case HIDDEN: '\033[8m';
 
-		case BLACK: '\033[38;5;' + ASCII_BLACK_CODE + 'm';
-		case RED: '\033[38;5;' + ASCII_RED_CODE + 'm';
-		case GREEN: '\033[38;5;' + ASCII_GREEN_CODE + 'm';
-		case YELLOW: '\033[38;5;' + ASCII_YELLOW_CODE + 'm';
-		case BLUE: '\033[38;5;' + ASCII_BLUE_CODE + 'm';
-		case MAGENTA: '\033[38;5;' + ASCII_MAGENTA_CODE + 'm';
-		case CYAN: '\033[38;5;' + ASCII_CYAN_CODE + 'm';
-		case WHITE: '\033[38;5;' + ASCII_WHITE_CODE + 'm';
-		case LIGHT_BLACK: '\033[38;5;' + ASCII_LIGHT_BLACK_CODE + 'm';
-		case LIGHT_RED: '\033[38;5;' + ASCII_LIGHT_RED_CODE + 'm';
-		case LIGHT_GREEN: '\033[38;5;' + ASCII_LIGHT_GREEN_CODE + 'm';
-		case LIGHT_YELLOW: '\033[38;5;' + ASCII_LIGHT_YELLOW_CODE + 'm';
-		case LIGHT_BLUE: '\033[38;5;' + ASCII_LIGHT_BLUE_CODE + 'm';
-		case LIGHT_MAGENTA: '\033[38;5;' + ASCII_LIGHT_MAGENTA_CODE + 'm';
-		case LIGHT_CYAN: '\033[38;5;' + ASCII_LIGHT_CYAN_CODE + 'm';
-		case LIGHT_WHITE: '\033[38;5;' + ASCII_LIGHT_WHITE_CODE + 'm';
+			case BLACK: '\033[38;5;' + ASCII_BLACK_CODE + 'm';
+			case RED: '\033[38;5;' + ASCII_RED_CODE + 'm';
+			case GREEN: '\033[38;5;' + ASCII_GREEN_CODE + 'm';
+			case YELLOW: '\033[38;5;' + ASCII_YELLOW_CODE + 'm';
+			case BLUE: '\033[38;5;' + ASCII_BLUE_CODE + 'm';
+			case MAGENTA: '\033[38;5;' + ASCII_MAGENTA_CODE + 'm';
+			case CYAN: '\033[38;5;' + ASCII_CYAN_CODE + 'm';
+			case WHITE: '\033[38;5;' + ASCII_WHITE_CODE + 'm';
+			case LIGHT_BLACK: '\033[38;5;' + ASCII_LIGHT_BLACK_CODE + 'm';
+			case LIGHT_RED: '\033[38;5;' + ASCII_LIGHT_RED_CODE + 'm';
+			case LIGHT_GREEN: '\033[38;5;' + ASCII_LIGHT_GREEN_CODE + 'm';
+			case LIGHT_YELLOW: '\033[38;5;' + ASCII_LIGHT_YELLOW_CODE + 'm';
+			case LIGHT_BLUE: '\033[38;5;' + ASCII_LIGHT_BLUE_CODE + 'm';
+			case LIGHT_MAGENTA: '\033[38;5;' + ASCII_LIGHT_MAGENTA_CODE + 'm';
+			case LIGHT_CYAN: '\033[38;5;' + ASCII_LIGHT_CYAN_CODE + 'm';
+			case LIGHT_WHITE: '\033[38;5;' + ASCII_LIGHT_WHITE_CODE + 'm';
 
-		case BG_BLACK: '\033[48;5;' + ASCII_BLACK_CODE + 'm';
-		case BG_RED: '\033[48;5;' + ASCII_RED_CODE + 'm';
-		case BG_GREEN: '\033[48;5;' + ASCII_GREEN_CODE + 'm';
-		case BG_YELLOW: '\033[48;5;' + ASCII_YELLOW_CODE + 'm';
-		case BG_BLUE: '\033[48;5;' + ASCII_BLUE_CODE + 'm';
-		case BG_MAGENTA: '\033[48;5;' + ASCII_MAGENTA_CODE + 'm';
-		case BG_CYAN: '\033[48;5;' + ASCII_CYAN_CODE + 'm';
-		case BG_WHITE: '\033[48;5;' + ASCII_WHITE_CODE + 'm';
-		case BG_LIGHT_BLACK: '\033[48;5;' + ASCII_LIGHT_BLACK_CODE + 'm';
-		case BG_LIGHT_RED: '\033[48;5;' + ASCII_LIGHT_RED_CODE + 'm';
-		case BG_LIGHT_GREEN: '\033[48;5;' + ASCII_LIGHT_GREEN_CODE + 'm';
-		case BG_LIGHT_YELLOW: '\033[48;5;' + ASCII_LIGHT_YELLOW_CODE + 'm';
-		case BG_LIGHT_BLUE: '\033[48;5;' + ASCII_LIGHT_BLUE_CODE + 'm';
-		case BG_LIGHT_MAGENTA: '\033[48;5;' + ASCII_LIGHT_MAGENTA_CODE + 'm';
-		case BG_LIGHT_CYAN: '\033[48;5;' + ASCII_LIGHT_CYAN_CODE + 'm';
-		case BG_LIGHT_WHITE: '\033[48;5;' + ASCII_LIGHT_WHITE_CODE + 'm';
+			case BG_BLACK: '\033[48;5;' + ASCII_BLACK_CODE + 'm';
+			case BG_RED: '\033[48;5;' + ASCII_RED_CODE + 'm';
+			case BG_GREEN: '\033[48;5;' + ASCII_GREEN_CODE + 'm';
+			case BG_YELLOW: '\033[48;5;' + ASCII_YELLOW_CODE + 'm';
+			case BG_BLUE: '\033[48;5;' + ASCII_BLUE_CODE + 'm';
+			case BG_MAGENTA: '\033[48;5;' + ASCII_MAGENTA_CODE + 'm';
+			case BG_CYAN: '\033[48;5;' + ASCII_CYAN_CODE + 'm';
+			case BG_WHITE: '\033[48;5;' + ASCII_WHITE_CODE + 'm';
+			case BG_LIGHT_BLACK: '\033[48;5;' + ASCII_LIGHT_BLACK_CODE + 'm';
+			case BG_LIGHT_RED: '\033[48;5;' + ASCII_LIGHT_RED_CODE + 'm';
+			case BG_LIGHT_GREEN: '\033[48;5;' + ASCII_LIGHT_GREEN_CODE + 'm';
+			case BG_LIGHT_YELLOW: '\033[48;5;' + ASCII_LIGHT_YELLOW_CODE + 'm';
+			case BG_LIGHT_BLUE: '\033[48;5;' + ASCII_LIGHT_BLUE_CODE + 'm';
+			case BG_LIGHT_MAGENTA: '\033[48;5;' + ASCII_LIGHT_MAGENTA_CODE + 'm';
+			case BG_LIGHT_CYAN: '\033[48;5;' + ASCII_LIGHT_CYAN_CODE + 'm';
+			case BG_LIGHT_WHITE: '\033[48;5;' + ASCII_LIGHT_WHITE_CODE + 'm';
+		}
 	}
 
-	static function getBrowserFormat(name:FormatFlag):Null<String> return switch (name) {
-		case RESET: '';
+	static function getBrowserFormat(name:FormatFlag):Null<String> {
+		// custom CSS color (browser-only)
+		if ((name:String).charAt(0) == '#') {
+			return 'color: $name';
+		}
+		// inline CSS
+		if ((name:String).charAt(0) == '{') {
+			// return content but remove braces and convert to lower case
+			return (name:String).substr(1, (name:String).length - 2);
+		}
 
-		case BOLD: 'font-weight: bold';
-		case DIM: 'color: gray';
-		case UNDERLINE: 'text-decoration: underline';
-		case BLINK: 'text-decoration: blink';
-		case INVERT: '-webkit-filter: invert(100%); filter: invert(100%)'; // not supported
-		case HIDDEN: 'visibility: hidden'; // not supported
+		return switch (name) {
+			case RESET: '';
 
-		case BLACK: 'color: black';
-		case RED: 'color: red';
-		case GREEN: 'color: green';
-		case YELLOW: 'color: yellow';
-		case BLUE: 'color: blue';
-		case MAGENTA: 'color: magenta';
-		case CYAN: 'color: cyan';
-		case WHITE: 'color: whiteSmoke';
+			case BOLD: 'font-weight: bold';
+			case DIM: 'color: gray';
+			case UNDERLINE: 'text-decoration: underline';
+			case BLINK: 'text-decoration: blink'; // not supported
+			case INVERT: '-webkit-filter: invert(100%); filter: invert(100%)'; // not supported
+			case HIDDEN: 'visibility: hidden'; // not supported
 
-		case LIGHT_BLACK: 'color: gray';
-		case LIGHT_RED: 'color: salmon';
-		case LIGHT_GREEN: 'color: lightGreen';
-		case LIGHT_YELLOW: 'color: lightYellow';
-		case LIGHT_BLUE: 'color: lightBlue';
-		case LIGHT_MAGENTA: 'color: lightPink';
-		case LIGHT_CYAN: 'color: lightCyan';
-		case LIGHT_WHITE: 'color: white';
+			case BLACK: 'color: black';
+			case RED: 'color: red';
+			case GREEN: 'color: green';
+			case YELLOW: 'color: yellow';
+			case BLUE: 'color: blue';
+			case MAGENTA: 'color: magenta';
+			case CYAN: 'color: cyan';
+			case WHITE: 'color: whiteSmoke';
 
-		case BG_BLACK: 'background-color: black';
-		case BG_RED: 'background-color: red';
-		case BG_GREEN: 'background-color: green';
-		case BG_YELLOW: 'background-color: yellow';
-		case BG_BLUE: 'background-color: blue';
-		case BG_MAGENTA: 'background-color: magenta';
-		case BG_CYAN: 'background-color: cyan';
-		case BG_WHITE: 'background-color: whiteSmoke';
-		case BG_LIGHT_BLACK: 'background-color: gray';
-		case BG_LIGHT_RED: 'background-color: salmon';
-		case BG_LIGHT_GREEN: 'background-color: lightGreen';
-		case BG_LIGHT_YELLOW: 'background-color: lightYellow';
-		case BG_LIGHT_BLUE: 'background-color: lightBlue';
-		case BG_LIGHT_MAGENTA: 'background-color: lightPink';
-		case BG_LIGHT_CYAN: 'background-color: lightCyan';
-		case BG_LIGHT_WHITE: 'background-color: white';
+			case LIGHT_BLACK: 'color: gray';
+			case LIGHT_RED: 'color: salmon';
+			case LIGHT_GREEN: 'color: lightGreen';
+			case LIGHT_YELLOW: 'color: lightYellow';
+			case LIGHT_BLUE: 'color: lightBlue';
+			case LIGHT_MAGENTA: 'color: lightPink';
+			case LIGHT_CYAN: 'color: lightCyan';
+			case LIGHT_WHITE: 'color: white';
+
+			case BG_BLACK: 'background-color: black';
+			case BG_RED: 'background-color: red';
+			case BG_GREEN: 'background-color: green';
+			case BG_YELLOW: 'background-color: yellow';
+			case BG_BLUE: 'background-color: blue';
+			case BG_MAGENTA: 'background-color: magenta';
+			case BG_CYAN: 'background-color: cyan';
+			case BG_WHITE: 'background-color: whiteSmoke';
+			case BG_LIGHT_BLACK: 'background-color: gray';
+			case BG_LIGHT_RED: 'background-color: salmon';
+			case BG_LIGHT_GREEN: 'background-color: lightGreen';
+			case BG_LIGHT_YELLOW: 'background-color: lightYellow';
+			case BG_LIGHT_BLUE: 'background-color: lightBlue';
+			case BG_LIGHT_MAGENTA: 'background-color: lightPink';
+			case BG_LIGHT_CYAN: 'background-color: lightCyan';
+			case BG_LIGHT_WHITE: 'background-color: white';
+		}
 	}
 
 }
@@ -244,55 +267,57 @@ abstract ConsoleFormatMode(Int) {
 
 @:enum
 abstract FormatFlag(String) to String {
-	var RESET = 'RESET';
-	var BOLD = 'BOLD';
-	var DIM = 'DIM';
-	var UNDERLINE = 'UNDERLINE';
-	var BLINK = 'BLINK';
-	var INVERT = 'INVERT';
-	var HIDDEN = 'HIDDEN';
-	var BLACK = 'BLACK';
-	var RED = 'RED';
-	var GREEN = 'GREEN';
-	var YELLOW = 'YELLOW';
-	var BLUE = 'BLUE';
-	var MAGENTA = 'MAGENTA';
-	var CYAN = 'CYAN';
-	var WHITE = 'WHITE';
-	var LIGHT_BLACK = 'LIGHT_BLACK';
-	var LIGHT_RED = 'LIGHT_RED';
-	var LIGHT_GREEN = 'LIGHT_GREEN';
-	var LIGHT_YELLOW = 'LIGHT_YELLOW';
-	var LIGHT_BLUE = 'LIGHT_BLUE';
-	var LIGHT_MAGENTA = 'LIGHT_MAGENTA';
-	var LIGHT_CYAN = 'LIGHT_CYAN';
-	var LIGHT_WHITE = 'LIGHT_WHITE';
-	var BG_BLACK = 'BG_BLACK';
-	var BG_RED = 'BG_RED';
-	var BG_GREEN = 'BG_GREEN';
-	var BG_YELLOW = 'BG_YELLOW';
-	var BG_BLUE = 'BG_BLUE';
-	var BG_MAGENTA = 'BG_MAGENTA';
-	var BG_CYAN = 'BG_CYAN';
-	var BG_WHITE = 'BG_WHITE';
-	var BG_LIGHT_BLACK = 'BG_LIGHT_BLACK';
-	var BG_LIGHT_RED = 'BG_LIGHT_RED';
-	var BG_LIGHT_GREEN = 'BG_LIGHT_GREEN';
-	var BG_LIGHT_YELLOW = 'BG_LIGHT_YELLOW';
-	var BG_LIGHT_BLUE = 'BG_LIGHT_BLUE';
-	var BG_LIGHT_MAGENTA = 'BG_LIGHT_MAGENTA';
-	var BG_LIGHT_CYAN = 'BG_LIGHT_CYAN';
-	var BG_LIGHT_WHITE = 'BG_LIGHT_WHITE';
+	var RESET = 'reset';
+	var BOLD = 'bold';
+	var DIM = 'dim';
+	var UNDERLINE = 'underline';
+	var BLINK = 'blink';
+	var INVERT = 'invert';
+	var HIDDEN = 'hidden';
+	var BLACK = 'black';
+	var RED = 'red';
+	var GREEN = 'green';
+	var YELLOW = 'yellow';
+	var BLUE = 'blue';
+	var MAGENTA = 'magenta';
+	var CYAN = 'cyan';
+	var WHITE = 'white';
+	var LIGHT_BLACK = 'light_black';
+	var LIGHT_RED = 'light_red';
+	var LIGHT_GREEN = 'light_green';
+	var LIGHT_YELLOW = 'light_yellow';
+	var LIGHT_BLUE = 'light_blue';
+	var LIGHT_MAGENTA = 'light_magenta';
+	var LIGHT_CYAN = 'light_cyan';
+	var LIGHT_WHITE = 'light_white';
+	var BG_BLACK = 'bg_black';
+	var BG_RED = 'bg_red';
+	var BG_GREEN = 'bg_green';
+	var BG_YELLOW = 'bg_yellow';
+	var BG_BLUE = 'bg_blue';
+	var BG_MAGENTA = 'bg_magenta';
+	var BG_CYAN = 'bg_cyan';
+	var BG_WHITE = 'bg_white';
+	var BG_LIGHT_BLACK = 'bg_light_black';
+	var BG_LIGHT_RED = 'bg_light_red';
+	var BG_LIGHT_GREEN = 'bg_light_green';
+	var BG_LIGHT_YELLOW = 'bg_light_yellow';
+	var BG_LIGHT_BLUE = 'bg_light_blue';
+	var BG_LIGHT_MAGENTA = 'bg_light_magenta';
+	var BG_LIGHT_CYAN = 'bg_light_cyan';
+	var BG_LIGHT_WHITE = 'bg_light_white';
 
 	@:from
 	static public inline function fromString(str:String) {
 		// handle aliases
-		return switch str {
+		return switch str.toLowerCase() {
 			case '/': RESET;
 			case '!': INVERT;
 			case 'u': UNDERLINE;
 			case 'b': BOLD;
-			default: untyped str.toUpperCase();
+			case 'gray': LIGHT_BLACK;
+			case 'bg_gray': BG_LIGHT_BLACK;
+			case transformed: untyped transformed;
 		}
 	}
 }
