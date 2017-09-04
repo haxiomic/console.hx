@@ -66,13 +66,13 @@ class Console {
 		- Invalid format flags are ignored (and removed from the string)
 		- Several aliases exist for common formatting flags:
 			%{-} => %{RESET}
-			%{!} => %{INVERTED}
-			%{_} => %{UNDERLINED}
+			%{!} => %{INVERT}
+			%{_} => %{UNDERLINE}
 			%{*} => %{BOLD}
 		- There are a few special cases for different console types
 			- Browser consoles:
 				- Hex color codes can be used to set the text color, e.g. %{#FF0000}
-				- CSS style fields can be used, e.g. %{background-color: black; color: white} 
+				- CSS style fields can be used, e.g. %{background-color: black; color: white}
 	**/
 	public static function printFormatted(s:String, outputStream:ConsoleOutputStream = Log){
 		var browserFormatArguments = [];
@@ -156,9 +156,9 @@ class Console {
 
 		case BOLD: '\033[1m';
 		case DIM: '\033[2m';
-		case UNDERLINED: '\033[4m';
+		case UNDERLINE: '\033[4m';
 		case BLINK: '\033[5m';
-		case INVERTED: '\033[7m';
+		case INVERT: '\033[7m';
 		case HIDDEN: '\033[8m';
 
 		case BLACK: '\033[38;5;' + ASCII_BLACK_CODE + 'm';
@@ -206,9 +206,9 @@ class Console {
 
 			case BOLD: 'font-weight: bold';
 			case DIM: 'color: gray';
-			case UNDERLINED: 'text-decoration: underline';
+			case UNDERLINE: 'text-decoration: underline';
 			case BLINK: 'text-decoration: blink';
-			case INVERTED: '-webkit-filter: invert(100%); filter: invert(100%)'; // not supported
+			case INVERT: '-webkit-filter: invert(100%); filter: invert(100%)'; // not supported
 			case HIDDEN: 'visibility: hidden'; // not supported
 
 			case BLACK: 'color: black';
@@ -272,9 +272,9 @@ abstract FormatFlag(String) to String {
 	var RESET = 'RESET';
 	var BOLD = 'BOLD';
 	var DIM = 'DIM';
-	var UNDERLINED = 'UNDERLINED';
+	var UNDERLINE = 'UNDERLINE';
 	var BLINK = 'BLINK';
-	var INVERTED = 'INVERTED';
+	var INVERT = 'INVERT';
 	var HIDDEN = 'HIDDEN';
 	var BLACK = 'BLACK';
 	var RED = 'RED';
@@ -314,8 +314,8 @@ abstract FormatFlag(String) to String {
 		// handle aliases
 		return switch str {
 			case '-': RESET;
-			case '!': INVERTED;
-			case '_': UNDERLINED;
+			case '!': INVERT;
+			case '_': UNDERLINE;
 			case '*': BOLD;
 			default: untyped str.toUpperCase();
 		}
