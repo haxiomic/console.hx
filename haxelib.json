@@ -1,12 +1,11 @@
 {
-  "name": "console",
-  "url": "https://github.com/haxiomic/console",
-  "license": "Public Domain",
+  "name": "Console.hx",
+  "url": "https://github.com/haxiomic/console.hx",
+  "license": "MIT",
   "tags": [ "console", "colored", "print", "log" ],
-  "description": "Console.hx is a haxe console and logging utility for simple and cross-platform rich console output",
+  "description": "Console.hx is a haxe console and logging utility for easy rich console output on both native and browser consoles",
   "version": "0.0.1",
-  "classPath": "./",
   "releasenote": "",
-  "contributors": [""],
+  "contributors": ["haxiomic"],
   "dependencies": {}
 }
