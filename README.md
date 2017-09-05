@@ -25,7 +25,7 @@ This will print in your console something like:
 - Unknown tags are skipped and will not show up in the output
 - Hex colors can be used (including CSS shorthand form), for example
   - `<#FF0000>Red Text</>`
-  - `<bg#FF0000>Red Background</>`
+  - `<bg#F00>Red Background</>`
 - CSS can be used when targeting web browsers: for example: `<{color: red; font-size: 20px}>Inline CSS</>`. These will have no affect on native consoles
 
 ### Available Tags
