@@ -1,10 +1,21 @@
 class Basic {
 
 	static function main() {
+		Console.print('');
+		Console.log('<b><#FFFFFF>MAGIC</> <u><#9400D3>C</><#4B0082>O</><#0000FF>N</><#00FF00>S</><#FFFF00>O</><#FF7F00>L</><#FF0000>E</></u></b>');
+		Console.print('');
+
+		Console.log('<#fc2>Shorthand ███</><#ffcc22>███ Longhand</>');
+
+		// return;
 		Console.printFormatted('<b><BLACK>black</> <RED>red</> <GREEN>green</> <YELLOW>yellow</> <BLUE>blue</> <MAGENTA>magenta</> <CYAN>cyan</> <WHITE>white</></>');
 		Console.printFormatted('<b><light_BLACK>black</> <light_RED>red</> <light_GREEN>green</> <light_YELLOW>yellow</> <light_BLUE>blue</> <light_MAGENTA>magenta</> <light_CYAN>cyan</> <light_WHITE>white</></>');
 		Console.printFormatted('<BLACK>███</><RED>███</><GREEN>███</><YELLOW>███</><BLUE>███</><MAGENTA>███</><CYAN>███</><WHITE>███</>');
 		Console.printFormatted('<light_BLACK>███</><light_RED>███</><light_GREEN>███</><light_YELLOW>███</><light_BLUE>███</><light_MAGENTA>███</><light_CYAN>███</><light_WHITE>███</>');
+
+		Console.printFormatted('<b><#9400D3>R</><#4B0082>A</><#0000FF>I</><#00FF00>N</><#FFFF00>B</><#FF7F00>O</><#FF0000>W</></b>');
+		Console.printFormatted('!<!><b><#9400D3>R</><#4B0082>A</><#0000FF>I</><#00FF00>N</><#FFFF00>B</><#FF7F00>O</><#FF0000>W</></b></!>');
+		Console.printFormatted('<#9400D3>███</><#4B0082>███</><#0000FF>███</><#00FF00>███</><#FFFF00>███</><#FF7F00>███</><#FF0000>███</>');
 
 		Console.log('<cyan>Hello</> <b>World!</>');
 		Console.warn('<u><yellow>Warning</yellow></>: ...');

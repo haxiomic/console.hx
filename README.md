@@ -23,7 +23,7 @@ This will print in your console something like:
 - Whitespace is not allowed in tags, so `<b >` would be ignored and printed as-is
 - Tags can be escaped with a leading backslash: `\<b>` would be printed as `<b>`
 - Unknown tags are skipped and will not show up in the output
-- Hex colors can be used, for example
+- Hex colors can be used (including CSS shorthand form), for example
   - `<#FF0000>Red Text</>`
   - `<bg#FF0000>Red Background</>`
 - CSS can be used when targeting web browsers: for example: `<{color: red; font-size: 20px}>Inline CSS</>`. These will have no affect on native consoles

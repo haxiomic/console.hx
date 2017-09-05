@@ -215,6 +215,12 @@ class Console {
 		- This includes 216 colors and 24 grayscale values
 	*/
 	static function hexToAsciiColorCode(hex:String):Null<Int> {
+		// expand shorthand hex
+		if (hex.length == 3) {
+			var a = hex.split('');
+			hex = [a[0], a[0], a[1], a[1], a[2], a[2]].join('');
+		}
+
 		var r = Std.parseInt('0x'+hex.substr(0, 2));
 		var g = Std.parseInt('0x'+hex.substr(2, 2));
 		var b = Std.parseInt('0x'+hex.substr(4, 2));
