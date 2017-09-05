@@ -225,7 +225,7 @@ class Console {
 
 		// Find the nearest value's index in the set
 		// A metric like ciede2000 would be better, but this will do for now
-		inline function nearIdx(c:Int, set:Array<Int>){
+		function nearIdx(c:Int, set:Array<Int>){
 			var delta = Math.POSITIVE_INFINITY;
 			var index = -1;
 			for (i in 0...set.length) {
