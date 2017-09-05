@@ -101,9 +101,11 @@ class Console {
 			switch colorMode {
 				case AsciiTerminal:
 					return getAsciiFormat(RESET) + activeFormatFlagStack.map(function(f) return getAsciiFormat(f)).filter(function(s) return s != null).join('');
+				#if js
 				case BrowserConsole:
-					browserFormatArguments.push(activeFormatFlagStack.map(function(f) return getBrowserFormat(f)).filter(function(s) return s != null).join('; '));
+					browserFormatArguments.push(activeFormatFlagStack.map(function(f) return getBrowserFormat(f)).filter(function(s) return s != null).join(';'));
 					return '%c';
+				#end
 				case Disabled:
 					return '';
 			}
@@ -146,24 +148,24 @@ class Console {
 		return msg;
 	}
 
-	static function getAsciiFormat(name:FormatFlag):Null<String> {
+	static function getAsciiFormat(flag:FormatFlag):Null<String> {
 		// custom hex color
-		if ((name:String).charAt(0) == '#') {
-			var bestAsciiColor = hexToAsciiColorCode((name:String).substr(1));
+		if ((flag:String).charAt(0) == '#') {
+			var bestAsciiColor = hexToAsciiColorCode((flag:String).substr(1));
 			if (bestAsciiColor != null) {
 				return '\033[38;5;' + bestAsciiColor + 'm';
 			}
 		}
 
 		// custom hex background
-		if ((name:String).substr(0, 3) == 'bg#') {
-			var bestAsciiColor = hexToAsciiColorCode((name:String).substr(3));
+		if ((flag:String).substr(0, 3) == 'bg#') {
+			var bestAsciiColor = hexToAsciiColorCode((flag:String).substr(3));
 			if (bestAsciiColor != null) {
 				return '\033[48;5;' + bestAsciiColor + 'm';
 			}
 		}
 
-		return switch (name) {
+		return switch (flag) {
 			case RESET: '\033[m';
 
 			case BOLD: '\033[1m';
@@ -206,6 +208,7 @@ class Console {
 			case BG_LIGHT_MAGENTA: '\033[48;5;' + ASCII_LIGHT_MAGENTA_CODE + 'm';
 			case BG_LIGHT_CYAN: '\033[48;5;' + ASCII_LIGHT_CYAN_CODE + 'm';
 			case BG_LIGHT_WHITE: '\033[48;5;' + ASCII_LIGHT_WHITE_CODE + 'm';
+			default: return null;
 		}
 	}
 
@@ -213,86 +216,77 @@ class Console {
 		Find the best matching ascii color code for a given hex string
 		- Ascii 256-color terminals support a subset of 24-bit colors
 		- This includes 216 colors and 24 grayscale values
+		- Assumes valid hex string
 	*/
 	static function hexToAsciiColorCode(hex:String):Null<Int> {
-		// expand shorthand hex
-		if (hex.length == 3) {
-			var a = hex.split('');
-			hex = [a[0], a[0], a[1], a[1], a[2], a[2]].join('');
-		}
-
 		var r = Std.parseInt('0x'+hex.substr(0, 2));
 		var g = Std.parseInt('0x'+hex.substr(2, 2));
 		var b = Std.parseInt('0x'+hex.substr(4, 2));
 
-		if (r != null && g != null & b!= null) {
-			// Find the nearest value's index in the set
-			// A metric like ciede2000 would be better, but this will do for now
-			inline function nearIdx(c:Int, set:Array<Int>){
-				var delta = Math.POSITIVE_INFINITY;
-				var index = -1;
-				for (i in 0...set.length) {
-					var d = Math.abs(c - set[i]);
-					if (d < delta) {
-						delta = d;
-						index = i;
-					}
+		// Find the nearest value's index in the set
+		// A metric like ciede2000 would be better, but this will do for now
+		inline function nearIdx(c:Int, set:Array<Int>){
+			var delta = Math.POSITIVE_INFINITY;
+			var index = -1;
+			for (i in 0...set.length) {
+				var d = Math.abs(c - set[i]);
+				if (d < delta) {
+					delta = d;
+					index = i;
 				}
-				return index;
 			}
-
-			inline function clamp(x:Int, min:Int, max:Int){
-				return Math.max(Math.min(x, max), min);
-			}
-
-			// Colors are index 16 to 231 inclusive = 216 colors
-			// Steps are in spaces of 40 except for the first which is 95
-			// (0x5f + 40 * (n - 1)) * (n > 0 ? 1 : 0)
-			var colorSteps = [0x00, 0x5f, 0x87, 0xaf, 0xd7, 0xff];
-			var ir = nearIdx(r, colorSteps), ig = nearIdx(g, colorSteps), ib = nearIdx(b, colorSteps);
-			var ier = Math.abs(r - colorSteps[ir]), ieg = Math.abs(g - colorSteps[ig]), ieb = Math.abs(b - colorSteps[ib]);
-			var averageColorError = ier + ieg + ieb;
-
-			// Gray scale values are 232 to 255 inclusive = 24 colors
-			// Steps are in spaces of 10
-			// 0x08 + 10 * n = c
-			var jr = Math.round((r - 0x08) / 10), jg = Math.round((g - 0x08) / 10), jb = Math.round((b - 0x08) / 10);
-			var jer = Math.abs(r - clamp((jr * 10 + 0x08), 0x08, 0xee));
-			var jeg = Math.abs(g - clamp((jg * 10 + 0x08), 0x08, 0xee));
-			var jeb = Math.abs(b - clamp((jb * 10 + 0x08), 0x08, 0xee));
-			var averageGrayError = jer + jeg + jeb;
-
-			// If we hit an exact grayscale match then use that instead
-			if (averageGrayError < averageColorError && r == g && g == b) {
-				var grayIndex = jr + 232;
-				return grayIndex;
-			} else {
-				var colorIndex = 16 + ir*36 + ig*6 + ib;
-				return colorIndex;
-			}
+			return index;
 		}
 
-		return null;
+		inline function clamp(x:Int, min:Int, max:Int){
+			return Math.max(Math.min(x, max), min);
+		}
+
+		// Colors are index 16 to 231 inclusive = 216 colors
+		// Steps are in spaces of 40 except for the first which is 95
+		// (0x5f + 40 * (n - 1)) * (n > 0 ? 1 : 0)
+		var colorSteps = [0x00, 0x5f, 0x87, 0xaf, 0xd7, 0xff];
+		var ir = nearIdx(r, colorSteps), ig = nearIdx(g, colorSteps), ib = nearIdx(b, colorSteps);
+		var ier = Math.abs(r - colorSteps[ir]), ieg = Math.abs(g - colorSteps[ig]), ieb = Math.abs(b - colorSteps[ib]);
+		var averageColorError = ier + ieg + ieb;
+
+		// Gray scale values are 232 to 255 inclusive = 24 colors
+		// Steps are in spaces of 10
+		// 0x08 + 10 * n = c
+		var jr = Math.round((r - 0x08) / 10), jg = Math.round((g - 0x08) / 10), jb = Math.round((b - 0x08) / 10);
+		var jer = Math.abs(r - clamp((jr * 10 + 0x08), 0x08, 0xee));
+		var jeg = Math.abs(g - clamp((jg * 10 + 0x08), 0x08, 0xee));
+		var jeb = Math.abs(b - clamp((jb * 10 + 0x08), 0x08, 0xee));
+		var averageGrayError = jer + jeg + jeb;
+
+		// If we hit an exact grayscale match then use that instead
+		if (averageGrayError < averageColorError && r == g && g == b) {
+			var grayIndex = jr + 232;
+			return grayIndex;
+		} else {
+			var colorIndex = 16 + ir*36 + ig*6 + ib;
+			return colorIndex;
+		}
 	}
 
-	static function getBrowserFormat(name:FormatFlag):Null<String> {
+	static function getBrowserFormat(flag:FormatFlag):Null<String> {
 		// custom hex color
-		if ((name:String).charAt(0) == '#') {
-			return 'color: $name';
+		if ((flag:String).charAt(0) == '#') {
+			return 'color: $flag';
 		}
 
 		// custom hex background
-		if ((name:String).substr(0, 3) == 'bg#') {
-			return 'background-color: ${(name:String).substr(2)}';
+		if ((flag:String).substr(0, 3) == 'bg#') {
+			return 'background-color: ${(flag:String).substr(2)}';
 		}
 
-		// inline CSS
-		if ((name:String).charAt(0) == '{') {
+		// inline CSS - browser consoles only
+		if ((flag:String).charAt(0) == '{') {
 			// return content as-is but remove enclosing braces
-			return (name:String).substr(1, (name:String).length - 2);
+			return (flag:String).substr(1, (flag:String).length - 2);
 		}
 
-		return switch (name) {
+		return switch (flag) {
 			case RESET: '';
 
 			case BOLD: 'font-weight: bold';
@@ -314,7 +308,7 @@ class Console {
 			case LIGHT_BLACK: 'color: gray';
 			case LIGHT_RED: 'color: salmon';
 			case LIGHT_GREEN: 'color: lightGreen';
-			case LIGHT_YELLOW: 'color: lightYellow';
+			case LIGHT_YELLOW: 'color: #eeee90';
 			case LIGHT_BLUE: 'color: lightBlue';
 			case LIGHT_MAGENTA: 'color: lightPink';
 			case LIGHT_CYAN: 'color: lightCyan';
@@ -336,6 +330,7 @@ class Console {
 			case BG_LIGHT_MAGENTA: 'background-color: lightPink';
 			case BG_LIGHT_CYAN: 'background-color: lightCyan';
 			case BG_LIGHT_WHITE: 'background-color: white';
+			default: return null;
 		}
 	}
 
@@ -352,7 +347,10 @@ abstract ConsoleOutputStream(Int) {
 @:enum
 abstract ConsoleFormatMode(Int) {
 	var AsciiTerminal = 0;
+	#if js
+	// Only enable browser console output on js targets
 	var BrowserConsole = 1;
+	#end
 	var Disabled = 2;
 }
 
@@ -400,8 +398,33 @@ abstract FormatFlag(String) to String {
 
 	@:from
 	static public inline function fromString(str:String) {
+		str = str.toLowerCase();
+
+		// normalize hex colors
+		if (str.charAt(0) == '#' || str.substr(0, 3) == 'bg#') {
+			var hIdx = str.indexOf('#');
+			var hex = str.substr(hIdx + 1);
+
+			// expand shorthand hex
+			if (hex.length == 3) {
+				var a = hex.split('');
+				hex = [a[0], a[0], a[1], a[1], a[2], a[2]].join('');
+			}
+
+			// validate hex
+			if((~/[^0-9a-f]/i).match(hex) || hex.length < 6) {
+				// hex contains a non-hexadecimal character or it's too short
+				return untyped ''; // return empty flag, which has no formatting rules
+			}
+
+			var normalized = str.substring(0, hIdx) + '#' + hex; 
+
+			return untyped normalized;
+		}
+
+
 		// handle aliases
-		return switch str.toLowerCase() {
+		return switch str {
 			case '/': RESET;
 			case '!': INVERT;
 			case 'u': UNDERLINE;
