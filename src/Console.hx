@@ -299,7 +299,7 @@ class Console {
 			case BLACK: 'color: black';
 			case RED: 'color: red';
 			case GREEN: 'color: green';
-			case YELLOW: 'color: gold';
+			case YELLOW: 'color: #f5ba00';
 			case BLUE: 'color: blue';
 			case MAGENTA: 'color: magenta';
 			case CYAN: 'color: cyan';
@@ -308,7 +308,7 @@ class Console {
 			case LIGHT_BLACK: 'color: gray';
 			case LIGHT_RED: 'color: salmon';
 			case LIGHT_GREEN: 'color: lightGreen';
-			case LIGHT_YELLOW: 'color: #eeee90';
+			case LIGHT_YELLOW: 'color: #ffed88';
 			case LIGHT_BLUE: 'color: lightBlue';
 			case LIGHT_MAGENTA: 'color: lightPink';
 			case LIGHT_CYAN: 'color: lightCyan';
