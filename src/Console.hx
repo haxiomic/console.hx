@@ -147,6 +147,22 @@ class Console {
 	}
 
 	static function getAsciiFormat(name:FormatFlag):Null<String> {
+		// custom hex color
+		if ((name:String).charAt(0) == '#') {
+			var bestAsciiColor = hexToAsciiColorCode((name:String).substr(1));
+			if (bestAsciiColor != null) {
+				return '\033[38;5;' + bestAsciiColor + 'm';
+			}
+		}
+
+		// custom hex background
+		if ((name:String).substr(0, 3) == 'bg#') {
+			var bestAsciiColor = hexToAsciiColorCode((name:String).substr(3));
+			if (bestAsciiColor != null) {
+				return '\033[48;5;' + bestAsciiColor + 'm';
+			}
+		}
+
 		return switch (name) {
 			case RESET: '\033[m';
 
@@ -193,10 +209,75 @@ class Console {
 		}
 	}
 
+	/*
+		Find the best matching ascii color code for a given hex string
+		- Ascii 256-color terminals support a subset of 24-bit colors
+		- This includes 216 colors and 24 grayscale values
+	*/
+	static function hexToAsciiColorCode(hex:String):Null<Int> {
+		var r = Std.parseInt('0x'+hex.substr(0, 2));
+		var g = Std.parseInt('0x'+hex.substr(2, 2));
+		var b = Std.parseInt('0x'+hex.substr(4, 2));
+
+		if (r != null && g != null & b!= null) {
+			// Find the nearest value's index in the set
+			// A metric like ciede2000 would be better, but this will do for now
+			inline function nearIdx(c:Int, set:Array<Int>){
+				var delta = Math.POSITIVE_INFINITY;
+				var index = -1;
+				for (i in 0...set.length) {
+					var d = Math.abs(c - set[i]);
+					if (d < delta) {
+						delta = d;
+						index = i;
+					}
+				}
+				return index;
+			}
+
+			inline function clamp(x:Int, min:Int, max:Int){
+				return Math.max(Math.min(x, max), min);
+			}
+
+			// Colors are index 16 to 231 inclusive = 216 colors
+			// Steps are in spaces of 40 except for the first which is 95
+			// (0x5f + 40 * (n - 1)) * (n > 0 ? 1 : 0)
+			var colorSteps = [0x00, 0x5f, 0x87, 0xaf, 0xd7, 0xff];
+			var ir = nearIdx(r, colorSteps), ig = nearIdx(g, colorSteps), ib = nearIdx(b, colorSteps);
+			var ier = Math.abs(r - colorSteps[ir]), ieg = Math.abs(g - colorSteps[ig]), ieb = Math.abs(b - colorSteps[ib]);
+			var averageColorError = ier + ieg + ieb;
+
+			// Gray scale values are 232 to 255 inclusive = 24 colors
+			// Steps are in spaces of 10
+			// 0x08 + 10 * n = c
+			var jr = Math.round((r - 0x08) / 10), jg = Math.round((g - 0x08) / 10), jb = Math.round((b - 0x08) / 10);
+			var jer = Math.abs(r - clamp((jr * 10 + 0x08), 0x08, 0xee));
+			var jeg = Math.abs(g - clamp((jg * 10 + 0x08), 0x08, 0xee));
+			var jeb = Math.abs(b - clamp((jb * 10 + 0x08), 0x08, 0xee));
+			var averageGrayError = jer + jeg + jeb;
+
+			// If we hit an exact grayscale match then use that instead
+			if (averageGrayError < averageColorError && r == g && g == b) {
+				var grayIndex = jr + 232;
+				return grayIndex;
+			} else {
+				var colorIndex = 16 + ir*36 + ig*6 + ib;
+				return colorIndex;
+			}
+		}
+
+		return null;
+	}
+
 	static function getBrowserFormat(name:FormatFlag):Null<String> {
-		// custom CSS color (browser-only)
+		// custom hex color
 		if ((name:String).charAt(0) == '#') {
 			return 'color: $name';
+		}
+
+		// custom hex background
+		if ((name:String).substr(0, 3) == 'bg#') {
+			return 'background-color: ${(name:String).substr(2)}';
 		}
 
 		// inline CSS

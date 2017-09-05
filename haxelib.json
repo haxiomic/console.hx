@@ -4,9 +4,9 @@
   "license": "MIT",
   "tags": [ "console", "colored", "print", "log" ],
   "description": "Console.hx is a haxe logging utility for easy rich output in both native and browser consoles",
-  "version": "0.1.4",
+  "version": "0.1.5",
   "classPath": "src/",
-  "releasenote": "Use <tag> syntax instead of cumulative %{custom} syntax",
+  "releasenote": "Added support for ASCII 256 palette colors with custom color tag, e.g. <#FF0000>",
   "contributors": ["haxiomic"],
   "dependencies": {}
 }

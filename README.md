@@ -21,7 +21,10 @@ This will print in your console something like:
 - Whitespace is not allowed in tags, so `<b >` would be ignored and printed as-is
 - Tags can be escaped with a leading backslash: `\<b>` would be printed as `<b>`
 - Unknown tags are skipped and will not show up in the output
-- For browser targets, CSS fields and colors can be used, for example: `<{color: red; font-size: 20px}>Inline CSS</>` or `<#FF0000>Red Text</#FF0000>`. These will have no affect on native consoles
+- Hex colors can be used, for example
+  - `<#FF0000>Red Text</>`
+  - `<bg#FF0000>Red Background</>`
+- CSS can be used when targeting web browsers: for example: `<{color: red; font-size: 20px}>Inline CSS</>`. These will have no affect on native consoles
 
 ### Available Tags
 
@@ -34,6 +37,8 @@ This will print in your console something like:
 |          `<blink>`           |     Blink (*Native console only*)     |
 |      `<invert>`, `<!>`       | Invert colors (*Native console only*) |
 |          `<hidden>`          |   Hide text (*Native console only*)   |
+|         `<#FF0000>`          |        Use hex for text color         |
+|        `<bg#FF0000>`         |     Use hex for background color      |
 |          `<black>`           |           Black text color            |
 |           `<red>`            |            Red text color             |
 |          `<green>`           |           Green text color            |
@@ -69,7 +74,7 @@ This will print in your console something like:
 
 ### Supported Targets
 
-Formatting should work correctly all haxe targets with a console however here's a list below of which of the notable ones I've verified. Normal linux consoles are expected to work correctly, however, I suspect there will issues with the Windows CMD prompt
+Formatting should work correctly all haxe targets with a console however here's a list below of which of the notable ones I've verified. Normal Linux consoles are expected to work correctly, however, I suspect there will issues with the Windows CMD prompt
 
 |           Target           |        Platform         | Tested |
 | :------------------------: | :---------------------: | :----: |
