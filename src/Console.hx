@@ -70,7 +70,7 @@ class Console {
 	**/
 	static var formatTagPattern = ~/(\\)?<(\/)?([^>{}\s]*|{[^>}]*})>/g;
 	public static function printFormatted(s:String, outputStream:ConsoleOutputStream = Log){
-		s = s + '<//>';// Add a reset all to the end to prevent splitting formatting to subsequent lines
+		s = s + '<//>';// Add a reset all to the end to prevent overflowing formatting to subsequent lines
 
 		var activeFormatFlagStack = new List<FormatFlag>();
 		var browserFormatArguments = [];
