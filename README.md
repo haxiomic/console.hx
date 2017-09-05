@@ -10,7 +10,9 @@ This will print in your console something like:
 
 ![don't-panic](images/don't-panic.png)
 
-(Depending on your console color settings). This will also work in a browser console when targeting the web.
+(Depending on your console color settings). This will also work in a browser console when targeting the web. You can also do things like:
+
+![don't-panic](images/magic-console.png)
 
 ### Formatting
 
