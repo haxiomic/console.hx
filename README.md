@@ -76,7 +76,7 @@ This will print in your console something like:
 
 ### Supported Targets
 
-Formatting should work correctly all haxe targets with a console however here's a list below of which of the notable ones I've verified. Normal Linux consoles are expected to work correctly, however, I suspect there will issues with the Windows CMD prompt
+Formatting should work correctly all haxe targets with a console however here's a list of which of the notable ones I've verified. Normal Linux consoles are expected to work correctly, however, I suspect there will issues with the Windows CMD prompt
 
 |           Target           |        Platform         | Tested |
 | :------------------------: | :---------------------: | :----: |
