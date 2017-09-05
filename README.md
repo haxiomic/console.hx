@@ -12,12 +12,11 @@ This will print in your console something like:
 
 (Depending on your console color settings). This will also work in a browser console when targeting the web. You can also do things like:
 
-![don't-panic](images/magic-console.png)
+![magic-console](images/magic-console.png)
 
 ### Formatting
 
-- Apply formatting with HTML-like tags it: _\<b>_**bold**_\</b>_
-- Tags are case-insensitive
+- Apply formatting with HTML-like tags it: _\<b>_**bold**_\</b>
 - A closing tag without a tag name can be used to close the last-open format tag `</>` so _\<b>_**bold**_\</>_ will also work
 - A double-closing tag like `<//>` will clear all active formatting
 - Whitespace is not allowed in tags, so `<b >` would be ignored and printed as-is
@@ -74,13 +73,17 @@ This will print in your console something like:
 |      `<bg_light_cyan>`       |      Text background light cyan       |
 |      `<bg_light_white>`      |      Text background light white      |
 
+### Installing
+
+`haxelib install console.hx`
+
 ### Supported Targets
 
-Formatting should work correctly all haxe targets with a console however here's a list of which of the notable ones I've verified. Normal Linux consoles are expected to work correctly, however, I suspect there will issues with the Windows CMD prompt
+Formatting should work on mac, linux and browser consoles however many [Windows consoles are not yet supported](https://github.com/haxiomic/console.hx/issues/1)
 
 |           Target           |        Platform         | Tested |
 | :------------------------: | :---------------------: | :----: |
 |             JS             | Chrome, Firefox, Safari |   ✔    |
 | C++, Neko, PHP, Python, HL |  MacOS - Terminal App   |   ✔    |
-| C++, Neko, PHP, Python, HL |       Windows CMD       |   ✘    |
 | C++, Neko, PHP, Python, HL | Linux Common Terminals  |   ✘    |
+| C++, Neko, PHP, Python, HL |       Windows CMD       |   ✘    |
