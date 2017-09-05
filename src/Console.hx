@@ -6,15 +6,15 @@ class Console {
 	static public var colorMode = guessConsoleFormatMode();
 
 	@:noCompletion
-	static public var logPrefix = '<b><gray>></gray></b> ';
+	static public var logPrefix = '<b><gray>><//> ';
 	@:noCompletion
-	static public var warnPrefix = '<b><yellow>></yellow></b> ';
+	static public var warnPrefix = '<b><yellow>><//> ';
 	@:noCompletion
-	static public var errorPrefix = '<b><red>></red></b> ';
+	static public var errorPrefix = '<b><red>><//> ';
 	@:noCompletion
-	static public var successPrefix = '<b><light_green>></light_green></b> ';
+	static public var successPrefix = '<b><light_green>><//> ';
 	@:noCompletion
-	static public var debugPrefix = '<b><magenta>></magenta></b> ';
+	static public var debugPrefix = '<b><magenta>><//> ';
 
 	static var argSeparator = ' ';
 
@@ -300,7 +300,7 @@ class Console {
 			case UNDERLINE: 'text-decoration: underline';
 			case BLINK: 'text-decoration: blink'; // not supported
 			case INVERT: '-webkit-filter: invert(100%); filter: invert(100%)'; // not supported
-			case HIDDEN: 'visibility: hidden'; // not supported
+			case HIDDEN: 'visibility: hidden; color: white'; // not supported
 
 			case BLACK: 'color: black';
 			case RED: 'color: red';
