@@ -339,9 +339,9 @@ class Console {
 @:enum
 abstract ConsoleOutputStream(Int) {
 	var Log = 0;
-	var Warn = 2;
-	var Error = 3;
-	var Debug = 4;
+	var Warn = 1;
+	var Error = 2;
+	var Debug = 3;
 }
 
 @:enum
