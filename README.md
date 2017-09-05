@@ -82,6 +82,5 @@ Formatting should work correctly all haxe targets with a console however here's 
 | :------------------------: | :---------------------: | :----: |
 |             JS             | Chrome, Firefox, Safari |   ✔    |
 | C++, Neko, PHP, Python, HL |  MacOS - Terminal App   |   ✔    |
-|            C++             |     Windows Console     |   ✘    |
-|            C++             | Linux Common Terminals  |   ✘    |
-|            C++             |         Windows         |   ✘    |
+| C++, Neko, PHP, Python, HL |       Windows CMD       |   ✘    |
+| C++, Neko, PHP, Python, HL | Linux Common Terminals  |   ✘    |
