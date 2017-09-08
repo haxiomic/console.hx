@@ -1,6 +1,11 @@
 import haxe.macro.Context;
 import haxe.macro.Expr;
 
+@:cppFileCode('
+	#if defined(HX_WINDOWS) && defined(ENABLE_VIRTUAL_TERMINAL_PROCESSING)
+	#include <windows.h>
+	#endif
+')
 class Console {
 
 	static public var formatMode = determineConsoleFormatMode();
@@ -17,8 +22,13 @@ class Console {
 	static public var debugPrefix = '<b><magenta>><//> ';
 
 	static var argSeparator = ' ';
+	static var compatibilityMode:CompatibilityMode = Sys.systemName() == 'Windows' ? Windows : None;
 
-	static function determineConsoleFormatMode(){
+	static function __init__(){
+	}
+
+	static function determineConsoleFormatMode():Console.ConsoleFormatMode {
+		#if !macro
 
 		// Browser console test
 		#if js
@@ -30,43 +40,53 @@ class Console {
 
 		// native unix tput test
 		#if (sys || nodejs)
-		inline function exec(cmd: String, args:Array<String>) {
-			#if nodejs
-			//hxnodejs doesn't support sys.io.Process yet
-			var p = js.node.ChildProcess.spawnSync(cmd, args, {});
-			return {
-				exit: p.status,
-				stdout: (p.stdout:js.node.Buffer).toString('utf8')
-			}
-			#else
-			var p = new sys.io.Process(cmd, args);
-			var exit = p.exitCode(true);
-			var stdout = p.stdout.readAll().toString();
-			p.close();
-			return {
-				exit: exit,
-				stdout: stdout
-			}
-			#end
+		var tputColors = exec('tput colors');
+		print(Std.string(tputColors));
+		if (tputColors.exit == 0 && Std.parseInt(tputColors.stdout) > 2) {
+			return AsciiTerminal;
 		}
 
-		var tputColors = exec('tput', ['colors']);
-		if (tputColors.exit == 0 && Std.parseInt(tputColors.stdout) > 2) {
+		// try checking if we can enable colors in Windows Command Prompt
+		#if cpp
+		var cmdPromptFormatting = false;
+
+		untyped __cpp__('
+			#if defined(HX_WINDOWS) && defined(ENABLE_VIRTUAL_TERMINAL_PROCESSING)
+			// Set output mode to handle virtual terminal sequences
+			HANDLE hOut = GetStdHandle(STD_OUTPUT_HANDLE);
+			DWORD dwMode = 0;	
+			if (hOut != INVALID_HANDLE_VALUE && GetConsoleMode(hOut, &dwMode))
+			{
+				printf("Enabling terminal sequences %d %d\\n", hOut, dwMode);
+
+				dwMode |= ENABLE_VIRTUAL_TERMINAL_PROCESSING;
+				if (!SetConsoleMode(hOut, dwMode)) {
+					printf("Failed to enable\\n");
+				} else {
+					printf("Enabled!\\n");
+					{0} = true;
+				}
+			}
+
+			#endif
+		', cmdPromptFormatting);
+		
+		if (cmdPromptFormatting) {
 			return AsciiTerminal;
 		}
 		#end
 
-		// for command prompt color support
-		/*
-		#if cpp, neko etc
-		[DllImport("kernel32.dll", SetLastError = true)]
-		public static extern bool GetConsoleMode(IntPtr hConsoleHandle, out uint lpMode);
+		// handle specifc TERM environments
+		var termEnv = Sys.environment().get('TERM');
 
-		cpp.Lib.load('kernel32', ...)
+		if (termEnv != null) {
+			if (~/cygwin|xterm|vt100/.match(termEnv)) {
+				return AsciiTerminal;
+			}
+		}
+		#end
 
-		see https://docs.microsoft.com/en-us/windows/console/setconsolemode
-		*/
-
+		#end
 		return Disabled;
 	}
 
@@ -101,6 +121,19 @@ class Console {
 			case Error: untyped __js__('console.error({0})', s);
 		}
 		#else
+
+		#if (sys || nodejs)
+		var previousCodePage:String = null;
+		// if we're running windows then enable unicode output while printing
+		if (compatibilityMode == Windows) {
+			var r = exec('chcp && chcp 65001');
+			var codePagePattern = ~/(\d+)/;
+			if(r.exit == 0 && codePagePattern.match(r.stdout)) {
+				previousCodePage = codePagePattern.matched(0);
+			}
+		}
+		#end
+
 		switch outputStream {
 			case Log, Debug:
 				Sys.stdout().writeString(s + '\n');
@@ -109,8 +142,15 @@ class Console {
 				Sys.stderr().writeString(s + '\n');
 				Sys.stderr().flush();
 		}
+
+		// restore previous code page so we don't affect other program output
+		#if (sys || nodejs)
+		if (previousCodePage != null && previousCodePage != '65001') {
+			exec('chcp $previousCodePage');
+		}
 		#end
 
+		#end
 	}
 
 	/**
@@ -382,6 +422,40 @@ class Console {
 		}
 	}
 
+	#if (sys || nodejs)
+	static inline function exec(cmd: String, ?args:Array<String>) {
+		#if (nodejs && !macro)
+		//hxnodejs doesn't support sys.io.Process yet
+		var p = js.node.ChildProcess.spawnSync(cmd, args, {});
+		var stdout = (p.stdout:js.node.Buffer) == null ? '' : (p.stdout:js.node.Buffer).toString();
+		if (stdout == null) stdout = '';
+		return {
+			exit: p.status,
+			stdout: stdout
+		}
+		#else
+		try {
+			var p = new sys.io.Process(cmd, args);
+			var exit = p.exitCode(true);
+			var stdout = p.stdout.readAll().toString();
+			p.close();
+			return {
+				exit: exit,
+				stdout: stdout,
+				stderr: p.stderr.readAll().toString()
+			}	
+		} catch (e:Any) {
+			print(e);
+			return {
+				exit: 1,
+				stdout: '',
+				stderr: ''
+			}
+		}
+		#end
+	}
+	#end
+
 }
 
 @:enum
@@ -401,6 +475,12 @@ abstract ConsoleFormatMode(Int) {
 	#end
 	var Disabled = 2;
 }
+
+@:enum
+abstract CompatibilityMode(Int) {
+	var None = 0;
+	var Windows = 1;
+} 
 
 @:enum
 abstract FormatFlag(String) to String {
