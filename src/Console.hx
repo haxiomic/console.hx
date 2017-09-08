@@ -3,7 +3,7 @@ import haxe.macro.Expr;
 
 class Console {
 
-	static public var colorMode = guessConsoleFormatMode();
+	static public var formatMode = determineConsoleFormatMode();
 
 	@:noCompletion
 	static public var logPrefix = '<b><gray>><//> ';
@@ -17,6 +17,58 @@ class Console {
 	static public var debugPrefix = '<b><magenta>><//> ';
 
 	static var argSeparator = ' ';
+
+	static function determineConsoleFormatMode(){
+
+		// Browser console test
+		#if js
+		// If there's a window object, we're probably running in a browser
+		if (untyped __typeof__(js.Browser.window) != 'undefined'){
+			return BrowserConsole;
+		}
+		#end
+
+		// native unix tput test
+		#if (sys || nodejs)
+		inline function exec(cmd: String, args:Array<String>) {
+			#if nodejs
+			//hxnodejs doesn't support sys.io.Process yet
+			var p = js.node.ChildProcess.spawnSync(cmd, args, {});
+			return {
+				exit: p.status,
+				stdout: (p.stdout:js.node.Buffer).toString('utf8')
+			}
+			#else
+			var p = new sys.io.Process(cmd, args);
+			var exit = p.exitCode(true);
+			var stdout = p.stdout.readAll().toString();
+			p.close();
+			return {
+				exit: exit,
+				stdout: stdout
+			}
+			#end
+		}
+
+		var tputColors = exec('tput', ['colors']);
+		if (tputColors.exit == 0 && Std.parseInt(tputColors.stdout) > 2) {
+			return AsciiTerminal;
+		}
+		#end
+
+		// for command prompt color support
+		/*
+		#if cpp, neko etc
+		[DllImport("kernel32.dll", SetLastError = true)]
+		public static extern bool GetConsoleMode(IntPtr hConsoleHandle, out uint lpMode);
+
+		cpp.Lib.load('kernel32', ...)
+
+		see https://docs.microsoft.com/en-us/windows/console/setconsolemode
+		*/
+
+		return Disabled;
+	}
 
 	macro static public function log(rest:Array<Expr>){
 		return macro Console.printFormatted(Console.logPrefix + ${joinArgs(rest)}, Log);
@@ -50,8 +102,12 @@ class Console {
 		}
 		#else
 		switch outputStream {
-			case Log, Debug, Warn: Sys.stdout().writeString(s + '\n');
-			case Error: Sys.stderr().writeString(s + '\n');
+			case Log, Debug:
+				Sys.stdout().writeString(s + '\n');
+				Sys.stdout().flush();
+			case Warn, Error:
+				Sys.stderr().writeString(s + '\n');
+				Sys.stderr().flush();
 		}
 		#end
 
@@ -98,7 +154,7 @@ class Console {
 				}
 			}
 
-			switch colorMode {
+			switch formatMode {
 				case AsciiTerminal:
 					return getAsciiFormat(RESET) + activeFormatFlagStack.map(function(f) return getAsciiFormat(f)).filter(function(s) return s != null).join('');
 				#if js
@@ -113,7 +169,7 @@ class Console {
 
 		// for browser consoles we need to call console.log with formatting arguments
 		#if js
-		if (colorMode == BrowserConsole) {
+		if (formatMode == BrowserConsole) {
 			var logArgs = [result].concat(browserFormatArguments);
 			switch outputStream {
 				case Log, Debug: untyped __js__('console.log.apply(console, {0})', logArgs);
@@ -126,14 +182,6 @@ class Console {
 
 		// otherwise we can print with inline escape codes
 		print(result, outputStream);
-	}
-
-	static inline function guessConsoleFormatMode():ConsoleFormatMode {
-		#if js
-		return untyped __typeof__(js.Browser.window) != 'undefined' ? BrowserConsole : AsciiTerminal;
-		#else
-		return AsciiTerminal;
-		#end
 	}
 
 	static function joinArgs(rest:Array<Expr>):ExprOf<String> {
