@@ -1,9 +1,15 @@
 import haxe.macro.Context;
 import haxe.macro.Expr;
 
+// For windows consoles we have to enable formatting through kernel32 calls
+@:cppFileCode('
+	#if defined(HX_WINDOWS)
+	#include <windows.h>
+	#endif
+')
 class Console {
 
-	static public var colorMode = guessConsoleFormatMode();
+	static public var formatMode = determineConsoleFormatMode();
 
 	@:noCompletion
 	static public var logPrefix = '<b><gray>><//> ';
@@ -17,6 +23,64 @@ class Console {
 	static public var debugPrefix = '<b><magenta>><//> ';
 
 	static var argSeparator = ' ';
+	static var unicodeCompatibilityMode:UnicodeCompatibilityMode = Sys.systemName() == 'Windows' ? Windows : None;
+	static var unicodeCompatibilityEnabled = false;
+
+	static function __init__(){
+	}
+
+	static function determineConsoleFormatMode():Console.ConsoleFormatMode {
+		#if !macro
+
+		// Browser console test
+		#if js
+		// If there's a window object, we're probably running in a browser
+		if (untyped __typeof__(js.Browser.window) != 'undefined'){
+			return BrowserConsole;
+		}
+		#end
+
+		// native unix tput test
+		#if (sys || nodejs)
+		var tputColors = exec('tput colors');
+		if (tputColors.exit == 0 && Std.parseInt(tputColors.stdout) > 2) {
+			return AsciiTerminal;
+		}
+
+		// try checking if we can enable colors in windows
+		#if cpp
+		var cmdPromptFormatting = false;
+
+		untyped __cpp__('
+			#if defined(HX_WINDOWS) && defined(ENABLE_VIRTUAL_TERMINAL_PROCESSING)
+			// Set output mode to handle virtual terminal sequences
+			HANDLE hOut = GetStdHandle(STD_OUTPUT_HANDLE);
+			DWORD dwMode = 0;	
+			if (hOut != INVALID_HANDLE_VALUE && GetConsoleMode(hOut, &dwMode))
+			{
+				dwMode |= ENABLE_VIRTUAL_TERMINAL_PROCESSING;
+				{0} = SetConsoleMode(hOut, dwMode);
+			}
+			#endif
+		', cmdPromptFormatting);
+		
+		if (cmdPromptFormatting) {
+			return AsciiTerminal;
+		}
+		#end
+
+		// detect specifc TERM environments
+		var termEnv = Sys.environment().get('TERM');
+
+		if (termEnv != null && ~/cygwin|xterm|vt100/.match(termEnv)) {
+			return AsciiTerminal;
+		}
+		#end
+
+		#end
+
+		return Disabled;
+	}
 
 	macro static public function log(rest:Array<Expr>){
 		return macro Console.printFormatted(Console.logPrefix + ${joinArgs(rest)}, Log);
@@ -49,12 +113,25 @@ class Console {
 			case Error: untyped __js__('console.error({0})', s);
 		}
 		#else
-		switch outputStream {
-			case Log, Debug, Warn: Sys.stdout().writeString(s + '\n');
-			case Error: Sys.stderr().writeString(s + '\n');
+
+		#if (sys || nodejs)
+		// if we're running windows then enable unicode output while printing
+		if (unicodeCompatibilityMode == Windows && !unicodeCompatibilityEnabled) {
+			exec('chcp 65001');
+			unicodeCompatibilityEnabled = true;
 		}
 		#end
 
+		switch outputStream {
+			case Log, Debug:
+				Sys.stdout().writeString(s + '\n');
+				Sys.stdout().flush();
+			case Warn, Error:
+				Sys.stderr().writeString(s + '\n');
+				Sys.stderr().flush();
+		}
+
+		#end
 	}
 
 	/**
@@ -98,7 +175,7 @@ class Console {
 				}
 			}
 
-			switch colorMode {
+			switch formatMode {
 				case AsciiTerminal:
 					return getAsciiFormat(RESET) + activeFormatFlagStack.map(function(f) return getAsciiFormat(f)).filter(function(s) return s != null).join('');
 				#if js
@@ -113,7 +190,7 @@ class Console {
 
 		// for browser consoles we need to call console.log with formatting arguments
 		#if js
-		if (colorMode == BrowserConsole) {
+		if (formatMode == BrowserConsole) {
 			var logArgs = [result].concat(browserFormatArguments);
 			switch outputStream {
 				case Log, Debug: untyped __js__('console.log.apply(console, {0})', logArgs);
@@ -126,14 +203,6 @@ class Console {
 
 		// otherwise we can print with inline escape codes
 		print(result, outputStream);
-	}
-
-	static inline function guessConsoleFormatMode():ConsoleFormatMode {
-		#if js
-		return untyped __typeof__(js.Browser.window) != 'undefined' ? BrowserConsole : AsciiTerminal;
-		#else
-		return AsciiTerminal;
-		#end
 	}
 
 	static function joinArgs(rest:Array<Expr>):ExprOf<String> {
@@ -334,6 +403,39 @@ class Console {
 		}
 	}
 
+	#if (sys || nodejs)
+	static inline function exec(cmd: String, ?args:Array<String>) {
+		#if (nodejs && !macro)
+		//hxnodejs doesn't support sys.io.Process yet
+		var p = js.node.ChildProcess.spawnSync(cmd, args, {});
+		var stdout = (p.stdout:js.node.Buffer) == null ? '' : (p.stdout:js.node.Buffer).toString();
+		if (stdout == null) stdout = '';
+		return {
+			exit: p.status,
+			stdout: stdout
+		}
+		#else
+		try {
+			var p = new sys.io.Process(cmd, args);
+			var exit = p.exitCode(true);
+			var stdout = p.stdout.readAll().toString();
+			p.close();
+			return {
+				exit: exit,
+				stdout: stdout,
+				stderr: p.stderr.readAll().toString()
+			}	
+		} catch (e:Any) {
+			return {
+				exit: 1,
+				stdout: '',
+				stderr: ''
+			}
+		}
+		#end
+	}
+	#end
+
 }
 
 @:enum
@@ -353,6 +455,12 @@ abstract ConsoleFormatMode(Int) {
 	#end
 	var Disabled = 2;
 }
+
+@:enum
+abstract UnicodeCompatibilityMode(Int) {
+	var None = 0;
+	var Windows = 1;
+} 
 
 @:enum
 abstract FormatFlag(String) to String {

@@ -17,14 +17,14 @@ This will print in your console something like:
 ### Formatting
 
 - Apply formatting with HTML-like tags it: _\<b>_**bold**_\</b>
+- Hex colors can be used (including CSS shorthand form), for example
+  - `<#FF0000>Red Text</>`
+  - `<bg#F00>Red Background</>`
 - A closing tag without a tag name can be used to close the last-open format tag `</>` so _\<b>_**bold**_\</>_ will also work
 - A double-closing tag like `<//>` will clear all active formatting
 - Whitespace is not allowed in tags, so `<b >` would be ignored and printed as-is
 - Tags can be escaped with a leading backslash: `\<b>` would be printed as `<b>`
 - Unknown tags are skipped and will not show up in the output
-- Hex colors can be used (including CSS shorthand form), for example
-  - `<#FF0000>Red Text</>`
-  - `<bg#F00>Red Background</>`
 - CSS can be used when targeting web browsers: for example: `<{color: red; font-size: 20px}>Inline CSS</>`. These will have no affect on native consoles
 
 ### Available Tags

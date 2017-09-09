@@ -1,13 +1,25 @@
 class Basic {
 
 	static function main() {
+
+		/**
+		Console.log('1 (log)');
+		Console.success('2 (success)');
+		Console.warn('3 (warn)');
+		Console.error('4 (error)');
+		Console.warn('5 (warn)');
+		Console.log('6 (log)');
+
+		Console.log('<red><b>  ¥ · £ · € · $ · ¢ · ₡ · ₢ · ₣ · ₤ · ₥ · ₦ · ₧ · ₨ · ₩ · ₪ · ₫ · ₭ · ₮ · ₯ · ₹ <//>');
+		/**/
+		
+		/**/
 		Console.print('');
 		Console.log('<b><#FFFFFF>MAGIC</> <u><#9400D3>C</><#4B0082>O</><#0000FF>N</><#00FF00>S</><#FFFF00>O</><#FF7F00>L</><#FF0000>E</></u></b>');
 		Console.print('');
 
 		Console.log('<#fc2>Shorthand ███</><#ffcc22>███ Longhand</>');
 
-		// return;
 		Console.printFormatted('<b><BLACK>black</> <RED>red</> <GREEN>green</> <YELLOW>yellow</> <BLUE>blue</> <MAGENTA>magenta</> <CYAN>cyan</> <WHITE>white</></>');
 		Console.printFormatted('<b><light_BLACK>black</> <light_RED>red</> <light_GREEN>green</> <light_YELLOW>yellow</> <light_BLUE>blue</> <light_MAGENTA>magenta</> <light_CYAN>cyan</> <light_WHITE>white</></>');
 		Console.printFormatted('<BLACK>███</><RED>███</><GREEN>███</><YELLOW>███</><BLUE>███</><MAGENTA>███</><CYAN>███</><WHITE>███</>');
@@ -54,6 +66,8 @@ class Basic {
 		Console.log('And how do we deal with <#Invalid>custom colors</> like <#z>this?</>');
 
 		Console.log('<b><#17a9f5>Nice Blue</> and a <#333333>grayscale</></> <#313030>different gray</>');
+
+		/**/
 	}
 
 }
