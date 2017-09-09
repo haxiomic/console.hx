@@ -3,10 +3,10 @@
   "url": "https://github.com/haxiomic/console.hx",
   "license": "MIT",
   "tags": [ "console", "colored", "print", "log" ],
-  "description": "Improve hex validation and better default yellow for browser consoles",
-  "version": "0.1.8",
+  "description": "Console.hx is a haxe logging utility for easy rich output in both native and browser consoles",
+  "version": "0.2.0",
   "classPath": "src/",
-  "releasenote": "Added support CSS hex shorthand",
+  "releasenote": "Windows Command Prompt color support for C++ target",
   "contributors": ["haxiomic"],
   "dependencies": {}
 }
