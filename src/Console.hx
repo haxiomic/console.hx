@@ -1,8 +1,9 @@
 import haxe.macro.Context;
 import haxe.macro.Expr;
 
+// For windows consoles we have to enable formatting through kernel32 calls
 @:cppFileCode('
-	#if defined(HX_WINDOWS) && defined(ENABLE_VIRTUAL_TERMINAL_PROCESSING)
+	#if defined(HX_WINDOWS)
 	#include <windows.h>
 	#endif
 ')
@@ -22,7 +23,8 @@ class Console {
 	static public var debugPrefix = '<b><magenta>><//> ';
 
 	static var argSeparator = ' ';
-	static var compatibilityMode:CompatibilityMode = Sys.systemName() == 'Windows' ? Windows : None;
+	static var unicodeCompatibilityMode:UnicodeCompatibilityMode = Sys.systemName() == 'Windows' ? Windows : None;
+	static var unicodeCompatibilityEnabled = false;
 
 	static function __init__(){
 	}
@@ -41,12 +43,11 @@ class Console {
 		// native unix tput test
 		#if (sys || nodejs)
 		var tputColors = exec('tput colors');
-		print(Std.string(tputColors));
 		if (tputColors.exit == 0 && Std.parseInt(tputColors.stdout) > 2) {
 			return AsciiTerminal;
 		}
 
-		// try checking if we can enable colors in Windows Command Prompt
+		// try checking if we can enable colors in windows
 		#if cpp
 		var cmdPromptFormatting = false;
 
@@ -57,17 +58,9 @@ class Console {
 			DWORD dwMode = 0;	
 			if (hOut != INVALID_HANDLE_VALUE && GetConsoleMode(hOut, &dwMode))
 			{
-				printf("Enabling terminal sequences %d %d\\n", hOut, dwMode);
-
 				dwMode |= ENABLE_VIRTUAL_TERMINAL_PROCESSING;
-				if (!SetConsoleMode(hOut, dwMode)) {
-					printf("Failed to enable\\n");
-				} else {
-					printf("Enabled!\\n");
-					{0} = true;
-				}
+				{0} = SetConsoleMode(hOut, dwMode);
 			}
-
 			#endif
 		', cmdPromptFormatting);
 		
@@ -76,17 +69,16 @@ class Console {
 		}
 		#end
 
-		// handle specifc TERM environments
+		// detect specifc TERM environments
 		var termEnv = Sys.environment().get('TERM');
 
-		if (termEnv != null) {
-			if (~/cygwin|xterm|vt100/.match(termEnv)) {
-				return AsciiTerminal;
-			}
+		if (termEnv != null && ~/cygwin|xterm|vt100/.match(termEnv)) {
+			return AsciiTerminal;
 		}
 		#end
 
 		#end
+
 		return Disabled;
 	}
 
@@ -123,14 +115,10 @@ class Console {
 		#else
 
 		#if (sys || nodejs)
-		var previousCodePage:String = null;
 		// if we're running windows then enable unicode output while printing
-		if (compatibilityMode == Windows) {
-			var r = exec('chcp && chcp 65001');
-			var codePagePattern = ~/(\d+)/;
-			if(r.exit == 0 && codePagePattern.match(r.stdout)) {
-				previousCodePage = codePagePattern.matched(0);
-			}
+		if (unicodeCompatibilityMode == Windows && !unicodeCompatibilityEnabled) {
+			exec('chcp 65001');
+			unicodeCompatibilityEnabled = true;
 		}
 		#end
 
@@ -142,13 +130,6 @@ class Console {
 				Sys.stderr().writeString(s + '\n');
 				Sys.stderr().flush();
 		}
-
-		// restore previous code page so we don't affect other program output
-		#if (sys || nodejs)
-		if (previousCodePage != null && previousCodePage != '65001') {
-			exec('chcp $previousCodePage');
-		}
-		#end
 
 		#end
 	}
@@ -445,7 +426,6 @@ class Console {
 				stderr: p.stderr.readAll().toString()
 			}	
 		} catch (e:Any) {
-			print(e);
 			return {
 				exit: 1,
 				stdout: '',
@@ -477,7 +457,7 @@ abstract ConsoleFormatMode(Int) {
 }
 
 @:enum
-abstract CompatibilityMode(Int) {
+abstract UnicodeCompatibilityMode(Int) {
 	var None = 0;
 	var Windows = 1;
 } 
