@@ -79,11 +79,12 @@ This will print in your console something like:
 
 ### Supported Targets
 
-Formatting should work on mac, linux and browser consoles however many [Windows consoles are not yet supported](https://github.com/haxiomic/console.hx/issues/1)
+Formatting should work on mac, linux and browser consoles however Command Prompt in Windows 10 has only recently received native color support, in this case, Console.hx formatting will work only for the C++ target
 
-|           Target           |        Platform         | Tested |
-| :------------------------: | :---------------------: | :----: |
-|             JS             | Chrome, Firefox, Safari |   ✔    |
-| C++, Neko, PHP, Python, HL |  MacOS - Terminal App   |   ✔    |
-| C++, Neko, PHP, Python, HL | Linux Common Terminals  |   ✘    |
-| C++, Neko, PHP, Python, HL |       Windows CMD       |   ✘    |
+|           Target           |        Platform         | Supported  |
+| :------------------------: | :---------------------: | :--------: |
+|             JS             | Chrome, Firefox, Safari |     ✔      |
+| C++, Neko, PHP, Python, HL |          MacOS          |     ✔      |
+| C++, Neko, PHP, Python, HL | Linux Common Terminals  | (untested) |
+|            C++             | Windows Command Prompt  |     ✔      |
+
