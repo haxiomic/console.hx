@@ -26,9 +26,6 @@ class Console {
 	static var unicodeCompatibilityMode:UnicodeCompatibilityMode = Sys.systemName() == 'Windows' ? Windows : None;
 	static var unicodeCompatibilityEnabled = false;
 
-	static function __init__(){
-	}
-
 	static function determineConsoleFormatMode():Console.ConsoleFormatMode {
 		#if !macro
 
@@ -49,7 +46,7 @@ class Console {
 
 		// try checking if we can enable colors in windows
 		#if cpp
-		var cmdPromptFormatting = false;
+		var winconVTEnabled = false;
 
 		untyped __cpp__('
 			#if defined(HX_WINDOWS) && defined(ENABLE_VIRTUAL_TERMINAL_PROCESSING)
@@ -62,9 +59,9 @@ class Console {
 				{0} = SetConsoleMode(hOut, dwMode);
 			}
 			#endif
-		', cmdPromptFormatting);
+		', winconVTEnabled);
 		
-		if (cmdPromptFormatting) {
+		if (winconVTEnabled) {
 			return AsciiTerminal;
 		}
 		#end
@@ -177,7 +174,13 @@ class Console {
 
 			switch formatMode {
 				case AsciiTerminal:
-					return getAsciiFormat(RESET) + activeFormatFlagStack.map(function(f) return getAsciiFormat(f)).filter(function(s) return s != null).join('');
+					// since format flags are cumulative, we only need to add the last item if it's an open tag
+					if (open) {
+						var last = getAsciiFormat(activeFormatFlagStack.last());
+						return last != null ? last : '';
+					} else {
+						return getAsciiFormat(RESET) + activeFormatFlagStack.map(function(f) return getAsciiFormat(f)).filter(function(s) return s != null).join('');
+					}
 				#if js
 				case BrowserConsole:
 					browserFormatArguments.push(activeFormatFlagStack.map(function(f) return getBrowserFormat(f)).filter(function(s) return s != null).join(';'));
@@ -404,7 +407,7 @@ class Console {
 	}
 
 	#if (sys || nodejs)
-	static inline function exec(cmd: String, ?args:Array<String>) {
+	static function exec(cmd: String, ?args:Array<String>) {
 		#if (nodejs && !macro)
 		//hxnodejs doesn't support sys.io.Process yet
 		var p = js.node.ChildProcess.spawnSync(cmd, args, {});
@@ -423,13 +426,11 @@ class Console {
 			return {
 				exit: exit,
 				stdout: stdout,
-				stderr: p.stderr.readAll().toString()
 			}	
 		} catch (e:Any) {
 			return {
 				exit: 1,
-				stdout: '',
-				stderr: ''
+				stdout: ''
 			}
 		}
 		#end
