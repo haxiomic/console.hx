@@ -1,19 +1,6 @@
-class Basic {
+class SampleTest {
 
 	static function main() {
-
-		/**
-		Console.log('1 (log)');
-		Console.success('2 (success)');
-		Console.warn('3 (warn)');
-		Console.error('4 (error)');
-		Console.warn('5 (warn)');
-		Console.log('6 (log)');
-
-		Console.log('<red><b>  ¥ · £ · € · $ · ¢ · ₡ · ₢ · ₣ · ₤ · ₥ · ₦ · ₧ · ₨ · ₩ · ₪ · ₫ · ₭ · ₮ · ₯ · ₹ <//>');
-		/**/
-		
-		/**/
 		Console.print('');
 		Console.log('<b><#FFFFFF>MAGIC</> <u><#9400D3>C</><#4B0082>O</><#0000FF>N</><#00FF00>S</><#FFFF00>O</><#FF7F00>L</><#FF0000>E</></u></b>');
 		Console.print('');
@@ -49,7 +36,7 @@ class Basic {
 
 		Console.printFormatted('What about bad </red><red></red> < red>closing unopened< /red> tags? </_> and unknown tags <?>hmm</?>');
 
-		Console.printFormatted('What about when you\'re trying to do math? a > b && a < b || > d');
+		Console.printFormatted('What about when you\'re trying to do math? a > bπ && a < b || > d');
 
 		Console.log('What <gray><b>about</> a</> short <red>hand</> for closing the last tag?');
 		Console.log('This could enable <#FF0000><b>Custom</#FF0000> colors</>');
@@ -66,8 +53,6 @@ class Basic {
 		Console.log('And how do we deal with <#Invalid>custom colors</> like <#z>this?</>');
 
 		Console.log('<b><#17a9f5>Nice Blue</> and a <#333333>grayscale</></> <#313030>different gray</>');
-
-		/**/
 	}
 
 }
