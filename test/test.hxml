@@ -9,34 +9,30 @@
 
 # --next 
 
--cmd echo "-- NODE JS --"
--main Basic
--cp ../src
--lib hxnodejs
--dce full
--js _built/basic.js
--cmd node _built/basic.js
--cmd echo "----"
+# -cmd echo "-- NODE JS --"
+# -main Basic
+# -cp ../src
+# -lib hxnodejs
+# -dce full
+# -js _built/basic.js
+# -cmd node _built/basic.js
+# -cmd echo "----"
 
 # --next
 
 # -cmd echo "-- NEKO --"
-# -main Basic
-# -cp ../src
-# -dce full
-# -neko _built/basic.n
-# -cmd neko _built/basic.n
+-main Basic
+-cp ../src
+-dce full
+-neko _built/basic.n
 # -cmd echo "----"
 
-# --next
+--next
 
-# -cmd echo " -- C++ --"
-# -main Basic
-# -cp ../src
-# -dce full
-# -cpp _built/cpp
-# -cmd ./_built/cpp/Basic
-# -cmd echo "----"
+-main Basic
+-cp ../src
+-dce full
+-cpp ./_built/cpp
 
 # Python syntax error?
 # --next
