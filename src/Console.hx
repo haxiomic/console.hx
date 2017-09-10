@@ -23,121 +23,38 @@ class Console {
 	static public var debugPrefix = '<b><magenta>><//> ';
 
 	static var argSeparator = ' ';
-	static var unicodeCompatibilityMode:UnicodeCompatibilityMode = Sys.systemName() == 'Windows' ? Windows : None;
+	static var unicodeCompatibilityMode:UnicodeCompatibilityMode = #if (sys || nodejs) Sys.systemName() == 'Windows' ? Windows : #end None;
 	static var unicodeCompatibilityEnabled = false;
 
-	static function determineConsoleFormatMode():Console.ConsoleFormatMode {
-		#if !macro
-
-		// Browser console test
-		#if js
-		// If there's a window object, we're probably running in a browser
-		if (untyped __typeof__(js.Browser.window) != 'undefined'){
-			return BrowserConsole;
-		}
-		#end
-
-		// native unix tput test
-		#if (sys || nodejs)
-		var tputColors = exec('tput colors');
-		if (tputColors.exit == 0 && Std.parseInt(tputColors.stdout) > 2) {
-			return AsciiTerminal;
-		}
-
-		// try checking if we can enable colors in windows
-		#if cpp
-		var winconVTEnabled = false;
-
-		untyped __cpp__('
-			#if defined(HX_WINDOWS) && defined(ENABLE_VIRTUAL_TERMINAL_PROCESSING)
-			// Set output mode to handle virtual terminal sequences
-			HANDLE hOut = GetStdHandle(STD_OUTPUT_HANDLE);
-			DWORD dwMode = 0;	
-			if (hOut != INVALID_HANDLE_VALUE && GetConsoleMode(hOut, &dwMode))
-			{
-				dwMode |= ENABLE_VIRTUAL_TERMINAL_PROCESSING;
-				{0} = SetConsoleMode(hOut, dwMode);
-			}
-			#endif
-		', winconVTEnabled);
-		
-		if (winconVTEnabled) {
-			return AsciiTerminal;
-		}
-		#elseif neko
-		if (Sys.systemName() == 'Windows') {
-			// try enabling virtual terminal emulation via wincon.ndll
-			var enableVTT:Void->Int = neko.Lib.load('wincon', 'enableVTT', 0);
-			if (enableVTT() != 0) {
-				// successfully enabled ascii escape codes in windows consoles
-				return AsciiTerminal;
-			}
-		}
-		#end
-
-		// detect specifc TERM environments
-		var termEnv = Sys.environment().get('TERM');
-
-		if (termEnv != null && ~/cygwin|xterm|vt100/.match(termEnv)) {
-			return AsciiTerminal;
-		}
-		#end
-
-		#end
-
-		return Disabled;
-	}
-
 	macro static public function log(rest:Array<Expr>){
-		return macro Console.printFormatted(Console.logPrefix + ${joinArgs(rest)}, Log);
+		return macro Console.printlnFormatted(Console.logPrefix + ${joinArgs(rest)}, Log);
 	}
 
 	macro static public function warn(rest:Array<Expr>){
-		return macro Console.printFormatted(Console.warnPrefix + ${joinArgs(rest)}, Warn);
+		return macro Console.printlnFormatted(Console.warnPrefix + ${joinArgs(rest)}, Warn);
 	}
 
 	macro static public function error(rest:Array<Expr>){
-		return macro Console.printFormatted(Console.errorPrefix + ${joinArgs(rest)}, Error);
+		return macro Console.printlnFormatted(Console.errorPrefix + ${joinArgs(rest)}, Error);
 	}
 
 	macro static public function success(rest:Array<Expr>){
-		return macro Console.printFormatted(Console.successPrefix + ${joinArgs(rest)}, Log);
+		return macro Console.printlnFormatted(Console.successPrefix + ${joinArgs(rest)}, Log);
 	}
 
 	// Only generates log call if -debug build flag is supplied
 	macro static public function debug(rest:Array<Expr>){
 		if(!Context.getDefines().exists('debug')) return macro null;
 		var pos = Context.currentPos();
-		return macro Console.printFormatted(Console.debugPrefix + '<magenta>${pos}:</magenta> ' + ${joinArgs(rest)}, Debug);
+		return macro Console.printlnFormatted(Console.debugPrefix + '<magenta>${pos}:</magenta> ' + ${joinArgs(rest)}, Debug);
 	}
 
-	static public inline function print(s:String, outputStream:ConsoleOutputStream = Log){
-		#if js
-		switch outputStream {
-			case Log, Debug: untyped __js__('console.log({0})', s);
-			case Warn: untyped __js__('console.warn({0})', s);
-			case Error: untyped __js__('console.error({0})', s);
-		}
-		#else
+	static public inline function printlnFormatted(s:String, outputStream:ConsoleOutputStream = Log){
+		return printFormatted(s + '\n', outputStream);
+	}
 
-		#if (sys || nodejs)
-		// if we're running windows then enable unicode output while printing
-		if (unicodeCompatibilityMode == Windows && !unicodeCompatibilityEnabled) {
-			exec('chcp 65001');
-			unicodeCompatibilityEnabled = true;
-		}
-		#end
-
-		switch outputStream {
-			case Log, Debug:
-				Sys.stdout().writeString(s + '\n');
-				Sys.stdout().flush();
-			case Warn, Error:
-				Sys.stderr().writeString(s + '\n');
-				Sys.stderr().flush();
-		}
-
-		#end
+	static public inline function println(s:String, outputStream:ConsoleOutputStream = Log){
+		return print(s + '\n', outputStream);
 	}
 
 	/**
@@ -151,8 +68,11 @@ class Console {
 		- Unknown tags are skipped and will not show up in the output
 		- For browser targets, CSS fields and colors can be used, for example: `<{color: red; font-size: 20px}>Inline CSS</>` or `<#FF0000>Red Text</#FF0000>`. These will have no affect on native consoles
 	**/
-	static var formatTagPattern = ~/<(\/)?([^>{}\s]*|{[^>}]*})>/g;
-	public static function printFormatted(s:String, outputStream:ConsoleOutputStream = Log){
+	static var formatTagPattern = ~/<(\/)?([^><{}\s]*|{[^}<>]*})>/g;
+	#if (sys || nodejs)
+	public
+	#end
+	static function printFormatted(s:String, outputStream:ConsoleOutputStream = Log){
 		s = s + '<//>';// Add a reset all to the end to prevent overflowing formatting to subsequent lines
 
 		var activeFormatFlagStack = new List<FormatFlag>();
@@ -179,6 +99,7 @@ class Console {
 			}
 
 			switch formatMode {
+				#if (sys || nodejs)
 				case AsciiTerminal:
 					// since format flags are cumulative, we only need to add the last item if it's an open tag
 					if (open) {
@@ -187,6 +108,7 @@ class Console {
 					} else {
 						return getAsciiFormat(RESET) + activeFormatFlagStack.map(function(f) return getAsciiFormat(f)).filter(function(s) return s != null).join('');
 					}
+				#end
 				#if js
 				case BrowserConsole:
 					browserFormatArguments.push(activeFormatFlagStack.map(function(f) return getBrowserFormat(f)).filter(function(s) return s != null).join(';'));
@@ -214,33 +136,47 @@ class Console {
 		print(result, outputStream);
 	}
 
-	static function joinArgs(rest:Array<Expr>):ExprOf<String> {
-		var msg:Expr = macro '';
-		for(i in 0...rest.length){
-			var e = rest[i];
-			msg = macro $msg + $e;
-			if (i != rest.length - 1){
-				msg = macro $msg + '$argSeparator';
-			}
+	#if (sys || nodejs)
+	public
+	#end
+	static function print(s:String, outputStream:ConsoleOutputStream = Log){
+		#if (sys || nodejs)
+		// if we're running windows then enable unicode output while printing
+		if (unicodeCompatibilityMode == Windows && !unicodeCompatibilityEnabled) {
+			exec('chcp 65001');
+			unicodeCompatibilityEnabled = true;
 		}
-		return msg;
+
+		switch outputStream {
+			case Log, Debug:
+				Sys.stdout().writeString(s);
+			case Warn, Error:
+				Sys.stderr().writeString(s);
+		}
+
+		#elseif js
+		// browser log
+		switch outputStream {
+			case Log, Debug: untyped __js__('console.log({0})', s);
+			case Warn: untyped __js__('console.warn({0})', s);
+			case Error: untyped __js__('console.error({0})', s);
+		}
+		#end
 	}
 
 	static function getAsciiFormat(flag:FormatFlag):Null<String> {
 		// custom hex color
 		if ((flag:String).charAt(0) == '#') {
-			var bestAsciiColor = hexToAsciiColorCode((flag:String).substr(1));
-			if (bestAsciiColor != null) {
-				return '\033[38;5;' + bestAsciiColor + 'm';
-			}
+			var hex = (flag:String).substr(1);
+			var r = Std.parseInt('0x'+hex.substr(0, 2)), g = Std.parseInt('0x'+hex.substr(2, 2)), b = Std.parseInt('0x'+hex.substr(4, 2));
+			return '\033[38;5;' + rgbToAscii256(r, g, b) + 'm';
 		}
 
 		// custom hex background
 		if ((flag:String).substr(0, 3) == 'bg#') {
-			var bestAsciiColor = hexToAsciiColorCode((flag:String).substr(3));
-			if (bestAsciiColor != null) {
-				return '\033[48;5;' + bestAsciiColor + 'm';
-			}
+			var hex = (flag:String).substr(3);
+			var r = Std.parseInt('0x'+hex.substr(0, 2)), g = Std.parseInt('0x'+hex.substr(2, 2)), b = Std.parseInt('0x'+hex.substr(4, 2));
+			return '\033[48;5;' + rgbToAscii256(r, g, b) + 'm';
 		}
 
 		return switch (flag) {
@@ -248,6 +184,7 @@ class Console {
 
 			case BOLD: '\033[1m';
 			case DIM: '\033[2m';
+			case ITALIC: '\033[3m';
 			case UNDERLINE: '\033[4m';
 			case BLINK: '\033[5m';
 			case INVERT: '\033[7m';
@@ -296,11 +233,7 @@ class Console {
 		- This includes 216 colors and 24 grayscale values
 		- Assumes valid hex string
 	*/
-	static function hexToAsciiColorCode(hex:String):Null<Int> {
-		var r = Std.parseInt('0x'+hex.substr(0, 2));
-		var g = Std.parseInt('0x'+hex.substr(2, 2));
-		var b = Std.parseInt('0x'+hex.substr(4, 2));
-
+	static function rgbToAscii256(r:Int, g:Int, b:Int):Null<Int> {
 		// Find the nearest value's index in the set
 		// A metric like ciede2000 would be better, but this will do for now
 		function nearIdx(c:Int, set:Array<Int>){
@@ -368,6 +301,7 @@ class Console {
 			case RESET: '';
 
 			case BOLD: 'font-weight: bold';
+			case ITALIC: 'font-style: italic';
 			case DIM: 'color: gray';
 			case UNDERLINE: 'text-decoration: underline';
 			case BLINK: 'text-decoration: blink'; // not supported
@@ -412,6 +346,81 @@ class Console {
 		}
 	}
 
+	static function determineConsoleFormatMode():Console.ConsoleFormatMode {
+		#if !macro
+
+		// browser console test
+		#if js
+		// if there's a window object, we're probably running in a browser
+		if (untyped __typeof__(js.Browser.window) != 'undefined'){
+			return BrowserConsole;
+		}
+		#end
+
+		// native unix tput test
+		#if (sys || nodejs)
+		var tputColors = exec('tput colors');
+		if (tputColors.exit == 0 && Std.parseInt(tputColors.stdout) > 2) {
+			return AsciiTerminal;
+		}
+
+		// try checking if we can enable colors in windows
+		#if cpp
+		var winconVTEnabled = false;
+
+		untyped __cpp__('
+			#if defined(HX_WINDOWS) && defined(ENABLE_VIRTUAL_TERMINAL_PROCESSING)
+			// Set output mode to handle virtual terminal sequences
+			HANDLE hOut = GetStdHandle(STD_OUTPUT_HANDLE);
+			DWORD dwMode = 0;
+			if (hOut != INVALID_HANDLE_VALUE && GetConsoleMode(hOut, &dwMode))
+			{
+				dwMode |= ENABLE_VIRTUAL_TERMINAL_PROCESSING;
+				{0} = SetConsoleMode(hOut, dwMode);
+			}
+			#endif
+		', winconVTEnabled);
+
+		if (winconVTEnabled) {
+			return AsciiTerminal;
+		}
+
+		#elseif neko
+		if (Sys.systemName() == 'Windows') {
+			// try enabling virtual terminal emulation via wincon.ndll
+			var enableVTT:Void->Int = neko.Lib.load('wincon', 'enableVTT', 0);
+			if (enableVTT() != 0) {
+				// successfully enabled ascii escape codes in windows consoles
+				return AsciiTerminal;
+			}
+		}
+		#end
+
+		// detect specific TERM environments
+		var termEnv = Sys.environment().get('TERM');
+
+		if (termEnv != null && ~/cygwin|xterm|vt100/.match(termEnv)) {
+			return AsciiTerminal;
+		}
+		#end
+
+		#end
+
+		return Disabled;
+	}
+
+	static function joinArgs(rest:Array<Expr>):ExprOf<String> {
+		var msg:Expr = macro '';
+		for(i in 0...rest.length){
+			var e = rest[i];
+			msg = macro $msg + $e;
+			if (i != rest.length - 1){
+				msg = macro $msg + '$argSeparator';
+			}
+		}
+		return msg;
+	}
+
 	#if (sys || nodejs)
 	static function exec(cmd: String, ?args:Array<String>) {
 		#if (nodejs && !macro)
@@ -432,7 +441,7 @@ class Console {
 			return {
 				exit: exit,
 				stdout: stdout,
-			}	
+			}
 		} catch (e:Any) {
 			return {
 				exit: 1,
@@ -455,7 +464,9 @@ abstract ConsoleOutputStream(Int) {
 
 @:enum
 abstract ConsoleFormatMode(Int) {
+	#if (sys || nodejs)
 	var AsciiTerminal = 0;
+	#end
 	#if js
 	// Only enable browser console output on js targets
 	var BrowserConsole = 1;
@@ -467,12 +478,13 @@ abstract ConsoleFormatMode(Int) {
 abstract UnicodeCompatibilityMode(Int) {
 	var None = 0;
 	var Windows = 1;
-} 
+}
 
 @:enum
 abstract FormatFlag(String) to String {
 	var RESET = 'reset';
 	var BOLD = 'bold';
+	var ITALIC = 'italic';
 	var DIM = 'dim';
 	var UNDERLINE = 'underline';
 	var BLINK = 'blink';
@@ -532,7 +544,7 @@ abstract FormatFlag(String) to String {
 				return untyped ''; // return empty flag, which has no formatting rules
 			}
 
-			var normalized = str.substring(0, hIdx) + '#' + hex; 
+			var normalized = str.substring(0, hIdx) + '#' + hex;
 
 			return untyped normalized;
 		}
@@ -544,6 +556,7 @@ abstract FormatFlag(String) to String {
 			case '!': INVERT;
 			case 'u': UNDERLINE;
 			case 'b': BOLD;
+			case 'i': ITALIC;
 			case 'gray': LIGHT_BLACK;
 			case 'bg_gray': BG_LIGHT_BLACK;
 			case transformed: untyped transformed;

@@ -3,35 +3,35 @@ class UnicodeTest {
 	static function main() {
 
 		title('Latin-1 Supplement');
-		Console.printFormatted(unicodeTestBlock(0x00A0, 0x00FF));
+		Console.printlnFormatted(unicodeTestBlock(0x00A0, 0x00FF));
 
 		title('Latin-1 Extended-A');
-		Console.printFormatted(unicodeTestBlock(0x0100, 0x017F));
+		Console.printlnFormatted(unicodeTestBlock(0x0100, 0x017F));
 
 		title('Latin-1 Extended-B');
-		Console.printFormatted(unicodeTestBlock(0x0180, 0x024F));
+		Console.printlnFormatted(unicodeTestBlock(0x0180, 0x024F));
 		
 		title('Greek and Coptic');
-		Console.printFormatted(unicodeTestBlock(0x0370, 0x03FF));
+		Console.printlnFormatted(unicodeTestBlock(0x0370, 0x03FF));
 
 		title('Block Elements');
-		Console.printFormatted(unicodeTestBlock(0x2580, 0x259F));
+		Console.printlnFormatted(unicodeTestBlock(0x2580, 0x259F));
 
 		title('Shapes');
-		Console.printFormatted(unicodeTestBlock(0x25A0, 0x25FF));
+		Console.printlnFormatted(unicodeTestBlock(0x25A0, 0x25FF));
 
 		title('Misc Symbols');
-		Console.printFormatted(unicodeTestBlock(0x2600, 0x26FF));
+		Console.printlnFormatted(unicodeTestBlock(0x2600, 0x26FF));
 
 		title('Hiragana');
-		Console.printFormatted(unicodeTestBlock(0x3040, 0x309F));
+		Console.printlnFormatted(unicodeTestBlock(0x3040, 0x309F));
 
 		title('Katakana');
-		Console.printFormatted(unicodeTestBlock(0x30A0, 0x30FF));
+		Console.printlnFormatted(unicodeTestBlock(0x30A0, 0x30FF));
 	}
 
 	static inline function title(str:String){
-		Console.printFormatted('<cyan> -- <b>$str</b> --</cyan>');
+		Console.printlnFormatted('<cyan> -- <b>$str</b> --</cyan>');
 	}
 
 	static inline function unicodeChar(code):String{

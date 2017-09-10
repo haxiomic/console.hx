@@ -5,14 +5,15 @@ class RunTests {
 
 	static function main(){
 		test('SampleTest');
-		test('LogStreamTest');
-		test('UnicodeTest');
+		// test('LogStreamTest');
+		// test('UnicodeTest');
 	}
 
 	static function test(name:String){
 		trace('$name');
 		testNeko(name);
 		testNodeJS(name);
+		testWebJS(name);
 		testCPP(name);
 	}
 
@@ -28,12 +29,26 @@ class RunTests {
 
 	static function testNodeJS(name:String){
 		trace('\tNodeJS $name');
-		var r = exec('haxe -main $name $commonFlags -lib hxnodejs -js $builtDir/$name.js');
+		var r = exec('haxe -main $name $commonFlags -lib hxnodejs -js $builtDir/$name.node.js');
 		if (r.exit == 0) {
-			Sys.command('node $builtDir/$name.js');
+			Sys.command('node $builtDir/$name.node.js');
 		} else {
 			trace(r.stdout, r.stderr);
 		}
+	}
+
+	static function testWebJS(name:String){
+		trace('\tWebJS $name');
+		var r = exec('haxe -main $name $commonFlags -js $builtDir/$name.js');
+		if (r.exit != 0) {
+			trace(r.stdout, r.stderr);
+			return;
+		}
+
+		var js = sys.io.File.getContent('$builtDir/$name.js');
+		var html = '<h1>Open Console</h1><script type="text/javascript">$js</script>';
+		sys.io.File.saveContent('$builtDir/$name.html', html);
+		trace('Generated $builtDir/$name.html');
 	}
 
 	static function testCPP(name:String){

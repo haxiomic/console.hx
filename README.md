@@ -10,13 +10,11 @@ This will print in your console something like:
 
 ![don't-panic](images/don't-panic.png)
 
-(Depending on your console color settings). This will also work in a browser console when targeting the web. You can also do things like:
-
-![magic-console](images/magic-console.png)
+(Depending on your console color settings). This will also work in a browser console when targeting the web
 
 ### Formatting
 
-- Apply formatting with HTML-like tags it: _\<b>_**bold**_\</b>
+- Apply formatting with HTML-like tags it: _\<b>_**bold**\</b>
 - Hex colors can be used (including CSS shorthand form), for example
   - `<#FF0000>Red Text</>`
   - `<bg#F00>Red Background</>`
@@ -34,6 +32,7 @@ This will print in your console something like:
 |      `<reset>`, `<//>`       |     Clear all previous formatting     |
 |            `</>`             |      Close last open formatting       |
 |       `<bold>`, `<b>`        |            Format as bold             |
+|      `<italic>`, `<i>`       |           Format as italic            |
 |           `<dim>`            |             Dimmed color              |
 |     `<underline>`, `<u>`     |               Underline               |
 |          `<blink>`           |     Blink (*Native console only*)     |
@@ -82,10 +81,10 @@ This will print in your console something like:
 
 Formatting should work on mac, linux and browser consoles for all targets, however for built-in Windows consoles like Command Prompt and PowerShell, only Neko and C++ will produce colored output (assuming you're running a fairly recent build of Windows 10)
 
-|           Target           |        Platform         | Supported  |
-| :------------------------: | :---------------------: | :--------: |
-|             JS             | Chrome, Firefox, Safari |     ✔      |
-| C++, Neko, PHP, Python, HL |          MacOS          |     ✔      |
-| C++, Neko, PHP, Python, HL | Linux Common Terminals  | (untested) |
-|         C++, Neko          | Windows Command Prompt  |     ✔      |
+|             Target             |        Platform         | Supported  |
+| :----------------------------: | :---------------------: | :--------: |
+|               JS               | Chrome, Firefox, Safari |     ✔      |
+| JS, C++, Neko, PHP, Python, HL |          MacOS          |     ✔      |
+| JS, C++, Neko, PHP, Python, HL | Linux Common Terminals  | (untested) |
+|           C++, Neko            | Windows Command Prompt  |     ✔      |
 
