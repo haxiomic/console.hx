@@ -4,9 +4,9 @@
   "license": "MIT",
   "tags": [ "console", "colored", "print", "log" ],
   "description": "Console.hx is a haxe logging utility for easy rich output in both native and browser consoles",
-  "version": "0.2.1",
+  "version": "0.2.2",
   "classPath": "src/",
-  "releasenote": "Windows Command Prompt color support for Neko target",
+  "releasenote": "Disable backslash to escape format tag",
   "contributors": ["haxiomic"],
   "dependencies": {}
 }
