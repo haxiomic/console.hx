@@ -1,15 +1,12 @@
 class Test {
 	
 	static function main(){
-		Console.log('Start');
+		Sys.println('Start');
 
-		var sum:Int->Int->Int = neko.Lib.load('wincon', 'sum', 2);
+		var enableVTT:Void->Bool = neko.Lib.load('../ndll/Windows/wincon', 'enableVTT', 0);
 
-		Console.log(sum(1,2));
-
-		if (sum(1,2)==3){
-			Console.success('OK!');
-		}
+		Sys.println(enableVTT());
+		Sys.println('\033[38;5;2mThis should be green!\033[m');
 	}
 
 }
