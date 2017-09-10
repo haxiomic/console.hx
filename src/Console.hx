@@ -151,7 +151,7 @@ class Console {
 		- Unknown tags are skipped and will not show up in the output
 		- For browser targets, CSS fields and colors can be used, for example: `<{color: red; font-size: 20px}>Inline CSS</>` or `<#FF0000>Red Text</#FF0000>`. These will have no affect on native consoles
 	**/
-	static var formatTagPattern = ~/(\\)?<(\/)?([^>{}\s]*|{[^>}]*})>/g;
+	static var formatTagPattern = ~/<(\/)?([^>{}\s]*|{[^>}]*})>/g;
 	public static function printFormatted(s:String, outputStream:ConsoleOutputStream = Log){
 		s = s + '<//>';// Add a reset all to the end to prevent overflowing formatting to subsequent lines
 
@@ -159,11 +159,8 @@ class Console {
 		var browserFormatArguments = [];
 
 		var result = formatTagPattern.map(s, function(e){
-			// handle escaped flag \<b>
-			if (e.matched(1) != null) return e.matched(0).substring(1);
-
-			var flag:FormatFlag = FormatFlag.fromString(e.matched(3));
-			var open = e.matched(2) == null;
+			var flag:FormatFlag = FormatFlag.fromString(e.matched(2));
+			var open = e.matched(1) == null;
 
 			if (flag == RESET) {
 				// clear formating
