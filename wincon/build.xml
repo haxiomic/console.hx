@@ -1,0 +1,13 @@
+<xml>
+   <include name="${HXCPP}/build-tool/BuildCommon.xml"/>
+
+   <files id="wincon">
+      <file name="wincon.cpp" />
+   </files>
+
+   <target id="default" output="${LIBPREFIX}wincon${HX_TARGET_SUFFIX}" tool="linker" toolid="${STD_MODULE_LINK}">
+   	  <ext value=".ndll" />
+      <outdir name="../${NDLLDIR}/${BINDIR}" />
+      <files id="wincon"/>
+   </target>
+</xml>
