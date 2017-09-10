@@ -4,9 +4,9 @@
   "license": "MIT",
   "tags": [ "console", "colored", "print", "log" ],
   "description": "Console.hx is a haxe logging utility for easy rich output in both native and browser consoles",
-  "version": "0.2.2",
+  "version": "0.2.3",
   "classPath": "src/",
-  "releasenote": "Disable backslash to escape format tag",
+  "releasenote": "Optimize a little, improve tests and make parsing more robust",
   "contributors": ["haxiomic"],
   "dependencies": {}
 }

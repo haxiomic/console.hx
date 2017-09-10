@@ -1,9 +1,5 @@
 class SampleTest {
 
-	macro static function readTextFile(path:String):ExprOf<String>{
-		return macro $v{sys.io.File.getContent(path)};
-	}
-
 	static function main() {
 
 		var logo:String = readTextFile('logo.txt');
@@ -37,7 +33,7 @@ class SampleTest {
 
 		Console.log('Testing <bold>Open Longhand Bold</b> with close shorthand');
 
-		Console.log('<b><i><u>All decoration<//>');
+		Console.log('<blink><b><i><u>All decoration<//>');
 
 		Console.printlnFormatted('<b><BLACK>black</> <RED>red</> <GREEN>green</> <YELLOW>yellow</> <BLUE>blue</> <MAGENTA>magenta</> <CYAN>cyan</> <WHITE>white</></>');
 		Console.printlnFormatted('<b><light_BLACK>black</> <light_RED>red</> <light_GREEN>green</> <light_YELLOW>yellow</> <light_BLUE>blue</> <light_MAGENTA>magenta</> <light_CYAN>cyan</> <light_WHITE>white</></>');
@@ -86,6 +82,10 @@ class SampleTest {
 		Console.log('And how do we deal with <#Invalid>custom colors</> like <#z>this?</>');
 
 		Console.log('<b><#17a9f5>Nice Blue</> and a <#333333>grayscale</></> <#313030>different gray</>');
+	}
+
+	macro static function readTextFile(path:String):ExprOf<String>{
+		return macro $v{sys.io.File.getContent(path)};
 	}
 
 }
