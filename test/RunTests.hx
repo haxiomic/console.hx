@@ -1,7 +1,7 @@
 class RunTests {
 
 	static var builtDir = '_built';
-	static var commonFlags = '-cp "../src" -dce full';
+	static var commonFlags = '-lib console.hx -dce full';
 
 	static function main(){
 		test('SampleTest');
@@ -39,11 +39,13 @@ class RunTests {
 	static function testCPP(name:String){
 		trace('\tC++ $name');
 		trace('Compiling...');
-		var r = exec('haxe -main $name $commonFlags -cpp $builtDir/cpp');
-		if (r.exit == 0) {
-			Sys.command('$builtDir/cpp/$name');
-		} else {
-			trace(r.stdout, r.stderr);
+		var exit = Sys.command('haxe -main $name $commonFlags -cpp $builtDir/cpp');
+		if (exit == 0) {
+			if (Sys.systemName() == 'Windows') {
+				Sys.command('$builtDir\\cpp\\$name');
+			} else {
+				Sys.command('$builtDir/cpp/$name');
+			}
 		}
 	}
 
