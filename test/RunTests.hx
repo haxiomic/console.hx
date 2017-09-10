@@ -11,8 +11,8 @@ class RunTests {
 
 	static function test(name:String){
 		trace('$name');
-		testNeko(name);
-		testNodeJS(name);
+		//testNeko(name);
+		//testNodeJS(name);
 		testCPP(name);
 	}
 
@@ -39,11 +39,15 @@ class RunTests {
 	static function testCPP(name:String){
 		trace('\tC++ $name');
 		trace('Compiling...');
-		var r = exec('haxe -main $name $commonFlags -cpp $builtDir/cpp');
+		var r = {exit: Sys.command('haxe -main $name $commonFlags -cpp $builtDir/cpp')};
 		if (r.exit == 0) {
-			Sys.command('$builtDir/cpp/$name');
+			if (Sys.systemName() == 'Windows') {
+				Sys.command('${builtDir}\\cpp\\$name.exe');
+			} else {
+				Sys.command('${builtDir}/cpp/$name');
+			}
 		} else {
-			trace(r.stdout, r.stderr);
+			//trace(r.stdout, r.stderr);
 		}
 	}
 
