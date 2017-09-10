@@ -64,6 +64,15 @@ class Console {
 		if (winconVTEnabled) {
 			return AsciiTerminal;
 		}
+		#elseif neko
+		if (Sys.systemName() == 'Windows') {
+			// try enabling virtual terminal emulation via wincon.ndll
+			var enableVTT:Void->Int = neko.Lib.load('wincon', 'enableVTT', 0);
+			if (enableVTT() != 0) {
+				// successfully enabled ascii escape codes in windows consoles
+				return AsciiTerminal;
+			}
+		}
 		#end
 
 		// detect specifc TERM environments
