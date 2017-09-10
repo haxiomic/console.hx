@@ -46,7 +46,7 @@ class RunTests {
 		}
 
 		var js = sys.io.File.getContent('$builtDir/$name.js');
-		var html = '<h1>Open Console</h1><script type="text/javascript">$js</script>';
+		var html = '<meta charset="utf8"><h1>Open Console</h1><script type="text/javascript">$js</script>';
 		sys.io.File.saveContent('$builtDir/$name.html', html);
 		trace('Generated $builtDir/$name.html');
 	}
