@@ -124,9 +124,9 @@ class Console {
 		if (formatMode == BrowserConsole) {
 			var logArgs = [result].concat(browserFormatArguments);
 			switch outputStream {
-				case Log, Debug: untyped __js__('console.log.apply(console, {0})', logArgs);
-				case Warn: untyped __js__('console.warn.apply(console, {0})', logArgs);
-				case Error: untyped __js__('console.error.apply(console, {0})', logArgs);
+				case Log, Debug: js.Syntax.code('console.log.apply(console, {0})', logArgs);
+				case Warn: js.Syntax.code('console.warn.apply(console, {0})', logArgs);
+				case Error: js.Syntax.code('console.error.apply(console, {0})', logArgs);
 			}
 			return;
 		}
@@ -157,9 +157,9 @@ class Console {
 		#elseif js
 		// browser log
 		switch outputStream {
-			case Log, Debug: untyped __js__('console.log({0})', s);
-			case Warn: untyped __js__('console.warn({0})', s);
-			case Error: untyped __js__('console.error({0})', s);
+			case Log, Debug: js.Syntax.code('console.log({0})', s);
+			case Warn: js.Syntax.code('console.warn({0})', s);
+			case Error: js.Syntax.code('console.error({0})', s);
 		}
 		#end
 	}
@@ -352,7 +352,7 @@ class Console {
 		// browser console test
 		#if js
 		// if there's a window object, we're probably running in a browser
-		if (untyped __typeof__(js.Browser.window) != 'undefined'){
+		if (js.Syntax.typeof(js.Browser.window) != 'undefined'){
 			return BrowserConsole;
 		}
 		#end
