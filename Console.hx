@@ -1,3 +1,4 @@
+import haxe.macro.Format;
 import haxe.macro.Context;
 import haxe.macro.Expr;
 
@@ -12,39 +13,44 @@ class Console {
 	static public var formatMode = determineConsoleFormatMode();
 
 	@:noCompletion
-	static public var logPrefix = '<b><gray>><//> ';
+	static public var logPrefix = '<b,gray>><//> ';
 	@:noCompletion
-	static public var warnPrefix = '<b><yellow>><//> ';
+	static public var warnPrefix = '<b,yellow>><//> ';
 	@:noCompletion
-	static public var errorPrefix = '<b><red>><//> ';
+	static public var errorPrefix = '<b,red>><//> ';
 	@:noCompletion
-	static public var successPrefix = '<b><light_green>><//> ';
+	static public var successPrefix = '<b,light_green>><//> ';
 	@:noCompletion
-	static public var debugPrefix = '<b><magenta>><//> ';
+	static public var debugPrefix = '<b,magenta>><//> ';
 
 	static var argSeparator = ' ';
 	static var unicodeCompatibilityMode:UnicodeCompatibilityMode = #if (sys || nodejs) Sys.systemName() == 'Windows' ? Windows : #end None;
 	static var unicodeCompatibilityEnabled = false;
 
 	macro static public function log(rest:Array<Expr>){
+		rest = rest.map(removeMarkupMeta);
 		return macro Console.printlnFormatted(Console.logPrefix + ${joinArgs(rest)}, Log);
 	}
 
 	macro static public function warn(rest:Array<Expr>){
+		rest = rest.map(removeMarkupMeta);
 		return macro Console.printlnFormatted(Console.warnPrefix + ${joinArgs(rest)}, Warn);
 	}
 
 	macro static public function error(rest:Array<Expr>){
+		rest = rest.map(removeMarkupMeta);
 		return macro Console.printlnFormatted(Console.errorPrefix + ${joinArgs(rest)}, Error);
 	}
 
 	macro static public function success(rest:Array<Expr>){
+		rest = rest.map(removeMarkupMeta);
 		return macro Console.printlnFormatted(Console.successPrefix + ${joinArgs(rest)}, Log);
 	}
 
 	// Only generates log call if -debug build flag is supplied
 	macro static public function debug(rest:Array<Expr>){
 		if(!Context.getDefines().exists('debug')) return macro null;
+		rest = rest.map(removeMarkupMeta);
 		var pos = Context.currentPos();
 		return macro Console.printlnFormatted(Console.debugPrefix + '<magenta>${pos}:</magenta> ' + ${joinArgs(rest)}, Debug);
 	}
@@ -56,6 +62,17 @@ class Console {
 	static public inline function println(s:String, outputStream:ConsoleOutputStream = Log){
 		return print(s + '\n', outputStream);
 	}
+
+	#if macro
+	static function removeMarkupMeta(e: Expr) {
+		return switch e.expr {
+			case EMeta({name: ':markup'}, innerExpr):
+				Format.format(innerExpr);
+			default:
+				e;
+		}
+	}
+	#end
 
 	/**
 		# Parse formatted message and print to console
@@ -75,38 +92,82 @@ class Console {
 	static function printFormatted(s:String, outputStream:ConsoleOutputStream = Log){
 		s = s + '<//>';// Add a reset all to the end to prevent overflowing formatting to subsequent lines
 
-		var activeFormatFlagStack = new List<FormatFlag>();
+		var activeFormatFlagStack = new Array<FormatFlag>();
+		var groupedProceedingTags = new Array<Int>();
 		var browserFormatArguments = [];
 
-		var result = formatTagPattern.map(s, function(e){
-			var flag:FormatFlag = FormatFlag.fromString(e.matched(2));
-			var open = e.matched(1) == null;
+		inline function addFlag(flag: FormatFlag, proceedingTags: Int) {
+			activeFormatFlagStack.push(flag);
+			groupedProceedingTags.push(proceedingTags);
+		}
 
-			if (flag == RESET) {
-				// clear formating
-				activeFormatFlagStack.clear();
-			} else {
-				if (open) {
-					activeFormatFlagStack.add(flag);
+		inline function removeFlag(flag: FormatFlag) {
+			var i = activeFormatFlagStack.indexOf(flag);
+			if (i != -1) {
+				var proceedingTags = groupedProceedingTags[i];
+				// remove n tags
+				activeFormatFlagStack.splice(i - proceedingTags, proceedingTags + 1);
+				groupedProceedingTags.splice(i - proceedingTags, proceedingTags + 1);
+			}
+		}
+
+		inline function resetFlags() {
+			activeFormatFlagStack = [];
+			groupedProceedingTags = [];
+		}
+
+		var result = formatTagPattern.map(s, function(e) {
+			var open = e.matched(1) == null;
+			var tags = e.matched(2).split(',');
+
+			// handle </> and <//>
+			if (!open && tags.length == 1) {
+				if (tags[0] == '') {
+					// we've got a shorthand to close the last tag: </>
+					var last = activeFormatFlagStack[activeFormatFlagStack.length - 1];
+					removeFlag(last);
+				} else if (FormatFlag.fromString(tags[0]) == FormatFlag.RESET) {
+					resetFlags();
 				} else {
-					if (flag != '') {
-						activeFormatFlagStack.remove(flag);
+					// handle </*>
+					var flag = FormatFlag.fromString(tags[0]);
+					if (flag != null) {
+						removeFlag(flag);
+					}
+				}
+			} else {
+				var proceedingTags = 0;
+				for (tag in tags) {
+					var flag = FormatFlag.fromString(tag);
+					if (flag == null) return e.matched(0); // unhandled tag, don't treat as formatting
+					if (open) {
+						addFlag(flag, proceedingTags);
+						proceedingTags++;
 					} else {
-						// We've got a shorthand to close the last tag: </>
-						activeFormatFlagStack.remove(activeFormatFlagStack.last());
+						removeFlag(flag);
 					}
 				}
 			}
 
+			// since format flags are cumulative, we only need to add the last item if it's an open tag
 			switch formatMode {
 				#if (sys || nodejs)
 				case AsciiTerminal:
 					// since format flags are cumulative, we only need to add the last item if it's an open tag
 					if (open) {
-						var last = getAsciiFormat(activeFormatFlagStack.last());
-						return last != null ? last : '';
+						if (activeFormatFlagStack.length > 0) {
+							var lastFlagCount = groupedProceedingTags[groupedProceedingTags.length - 1] + 1;
+							var asciiFormatString = '';
+							for (i in 0...lastFlagCount) {
+								var idx = groupedProceedingTags.length - 1 - i;
+								asciiFormatString += getAsciiFormat(activeFormatFlagStack[idx]);
+							}
+							return asciiFormatString;
+						} else {
+							return '';
+						}
 					} else {
-						return getAsciiFormat(RESET) + activeFormatFlagStack.map(function(f) return getAsciiFormat(f)).filter(function(s) return s != null).join('');
+						return getAsciiFormat(FormatFlag.RESET) + activeFormatFlagStack.map((f) -> getAsciiFormat(f)).filter((s) -> s != null).join('');
 					}
 				#end
 				#if js
