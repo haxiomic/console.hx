@@ -17,7 +17,7 @@ class Console {
 	@:noCompletion
 	static public var warnPrefix = '<b,yellow>><//> ';
 	@:noCompletion
-	static public var errorPrefix = '<b,red>><//> ';
+	static public var errorPrefix = '<b,red>></b> ';
 	@:noCompletion
 	static public var successPrefix = '<b,light_green>><//> ';
 	@:noCompletion
@@ -45,6 +45,15 @@ class Console {
 	macro static public function success(rest:Array<Expr>){
 		rest = rest.map(removeMarkupMeta);
 		return macro Console.printlnFormatted(Console.successPrefix + ${joinArgs(rest)}, Log);
+	}
+
+	macro static public function examine(rest:Array<Expr>) {
+		var printer = new haxe.macro.Printer();
+		var namedArgs = rest.map(e -> {
+			var exprString = printer.printExpr(e);
+			return macro $v{exprString} + ': ' + $e;
+		});
+		return macro Console.log(${joinArgs(namedArgs)});
 	}
 
 	// Only generates log call if -debug build flag is supplied
