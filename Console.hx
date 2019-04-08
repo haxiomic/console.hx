@@ -50,8 +50,16 @@ class Console {
 	macro static public function examine(rest:Array<Expr>) {
 		var printer = new haxe.macro.Printer();
 		var namedArgs = rest.map(e -> {
-			var exprString = printer.printExpr(e);
-			return macro $v{exprString} + ': ' + $e;
+			switch e.expr {
+				// print inline strings as just bold
+				case EConst(CString(str)):
+					return macro '<b><i>' + $e + '</i></b>';
+				// print expression as a string as well as the expression value (in bold)
+				default:
+					var exprString = printer.printExpr(e);
+					return macro $v{exprString} + ': <b>' + $e + '</b>';
+			}
+			
 		});
 		return macro Console.log(${joinArgs(namedArgs)});
 	}
