@@ -12,15 +12,10 @@ class Console {
 
 	static public var formatMode = determineConsoleFormatMode();
 
-	@:noCompletion
 	static public var logPrefix = '<b,gray>><//> ';
-	@:noCompletion
 	static public var warnPrefix = '<b,yellow>><//> ';
-	@:noCompletion
 	static public var errorPrefix = '<b,red>></b> ';
-	@:noCompletion
 	static public var successPrefix = '<b,light_green>><//> ';
-	@:noCompletion
 	static public var debugPrefix = '<b,magenta>><//> ';
 
 	static var argSeparator = ' ';
@@ -92,7 +87,6 @@ class Console {
 	#end
 
 	static var formatTagPattern = ~/<(\/)?([^><{}\s]*|{[^}<>]*})>/g;
-
 
 	/**
 		# Parse formatted message and print to console
@@ -475,7 +469,7 @@ class Console {
 				return AsciiTerminal;
 			}
 		}
-		#end
+		#end // neko
 
 		// detect specific TERM environments
 		var termEnv = Sys.environment().get('TERM');
@@ -483,9 +477,9 @@ class Console {
 		if (termEnv != null && ~/cygwin|xterm|vt100/.match(termEnv)) {
 			return AsciiTerminal;
 		}
-		#end
+		#end // (sys || nodejs)
 
-		#end
+		#end // !macro
 
 		return Disabled;
 	}
