@@ -197,12 +197,14 @@ class Console {
 		// for browser consoles we need to call console.log with formatting arguments
 		#if js
 		if (formatMode == BrowserConsole) {
+			#if (!no_console)
 			var logArgs = [result].concat(browserFormatArguments);
 			switch outputStream {
 				case Log, Debug: js.Syntax.code('console.log.apply(console, {0})', logArgs);
 				case Warn: js.Syntax.code('console.warn.apply(console, {0})', logArgs);
 				case Error: js.Syntax.code('console.error.apply(console, {0})', logArgs);
 			}
+			#end
 			return;
 		}
 		#end
@@ -215,6 +217,7 @@ class Console {
 	public
 	#end
 	static function print(s:String, outputStream:ConsoleOutputStream = Log){
+		#if (!no_console)
 		#if (sys || nodejs)
 		// if we're running windows then enable unicode output while printing
 		if (unicodeCompatibilityMode == Windows && !unicodeCompatibilityEnabled) {
@@ -236,6 +239,7 @@ class Console {
 			case Warn: js.Syntax.code('console.warn({0})', s);
 			case Error: js.Syntax.code('console.error({0})', s);
 		}
+		#end
 		#end
 	}
 
@@ -422,7 +426,7 @@ class Console {
 	}
 
 	static function determineConsoleFormatMode():Console.ConsoleFormatMode {
-		#if !macro
+		#if (!macro && !no_console)
 
 		// browser console test
 		#if js
@@ -479,7 +483,7 @@ class Console {
 		}
 		#end // (sys || nodejs)
 
-		#end // !macro
+		#end // (!macro && !no_console)
 
 		return Disabled;
 	}
