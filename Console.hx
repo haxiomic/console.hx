@@ -18,6 +18,8 @@ class Console {
 	static public var successPrefix = '<b,light_green>><//> ';
 	static public var debugPrefix = '<b,magenta>><//> ';
 
+	static public var logFileDirectory: Null<String> = null;
+
 	static var argSeparator = ' ';
 	static var unicodeCompatibilityMode:UnicodeCompatibilityMode = #if (sys || nodejs) Sys.systemName() == 'Windows' ? Windows : #end None;
 	static var unicodeCompatibilityEnabled = false;
@@ -217,8 +219,9 @@ class Console {
 	public
 	#end
 	static function print(s:String, outputStream:ConsoleOutputStream = Log){
-		#if (!no_console)
 		#if (sys || nodejs)
+
+		#if (!no_console)
 		// if we're running windows then enable unicode output while printing
 		if (unicodeCompatibilityMode == Windows && !unicodeCompatibilityEnabled) {
 			exec('chcp 65001');
@@ -231,6 +234,26 @@ class Console {
 			case Warn, Error:
 				Sys.stderr().writeString(s);
 		}
+		#end
+
+		// write to a log file
+		if (logFileDirectory != null) {
+			try {
+				if (!sys.FileSystem.exists(logFileDirectory)) {
+					sys.FileSystem.createDirectory(logFileDirectory);
+				}
+				// (Date.now(), "%Y-%m-%d_%H:%M:%S");
+				var now = Date.now();
+				var linePrefix = '[${now.toString()}] ';
+				var textLogFilename = '${DateTools.format(now, "%Y-%m-%d")}.txt';
+				var textLogFilepath = haxe.io.Path.join([logFileDirectory, textLogFilename]);
+				var fileHandle = sys.io.File.append(textLogFilepath, false);
+				fileHandle.writeString(linePrefix + s);
+				fileHandle.flush();
+				fileHandle.close();
+			} catch (e: Any) {
+			}
+		}
 
 		#elseif js
 		// browser log
@@ -239,7 +262,6 @@ class Console {
 			case Warn: js.Syntax.code('console.warn({0})', s);
 			case Error: js.Syntax.code('console.error({0})', s);
 		}
-		#end
 		#end
 	}
 
