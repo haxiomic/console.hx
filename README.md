@@ -1,10 +1,10 @@
 # Console.hx
 
-Console.hx is a haxe logging utility for easy rich output in both native and browser consoles
+Console.hx is a haxe logging utility for easy rich output in both native and browser consoles via a familiar HTML-like tag syntax.
 
-Example:
+For example:
 ````haxe
-Console.log('<b>Don’t</b> <red><u>Panic.</u></red>');
+Console.log('<b>Don’t</> <red,u>Panic.</>');
 ````
 This will print in your console something like:
 
@@ -14,15 +14,15 @@ This will print in your console something like:
 
 ### Formatting
 
-- Apply formatting with HTML-like tags it: _\<b>_**bold**\</b>
+- Apply formatting with HTML-like tags it: \<b>**bold**\</b> or \<i>*italic*\</i>
+- Close the last tag with shorthand \</>: \<b>**bold**</> not bold
+- A double-closing tag like `<//>` will clear all active formatting
+- Formatting can be combined into a single tag: \<b,i>***bold and italic***\</>
 - Hex colors can be used (including CSS shorthand form), for example
   - `<#FF0000>Red Text</>`
   - `<bg#F00>Red Background</>`
-- A closing tag without a tag name can be used to close the last-open format tag `</>` so _\<b>_**bold**_\</>_ will also work
-- A double-closing tag like `<//>` will clear all active formatting
 - Whitespace is not allowed in tags, so `<b >` would be ignored and printed as-is
 - Tags can be escaped with a leading backslash: `\<b>` would be printed as `<b>`
-- Unknown tags are skipped and will not show up in the output
 - CSS can be used when targeting web browsers: for example: `<{color: red; font-size: 20px}>Inline CSS</>`. These will have no affect on native consoles
 
 ### Available Tags
@@ -85,6 +85,6 @@ Formatting should work on mac, linux and browser consoles for all targets, howev
 | :----------------------------: | :---------------------: | :--------: |
 |               JS               | Chrome, Firefox, Safari |     ✔      |
 | JS, C++, Neko, PHP, Python, HL |          MacOS          |     ✔      |
-| JS, C++, Neko, PHP, Python, HL | Linux Common Terminals  | (untested) |
+| JS, C++, Neko, PHP, Python, HL | Linux Common Terminals  |     ✔      |
 |           C++, Neko            | Windows Command Prompt  |     ✔      |
 
