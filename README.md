@@ -10,7 +10,11 @@ This will print in your console something like:
 
 ![don't-panic](images/don't-panic.png)
 
-(Depending on your console color settings). This will also work in a browser console when targeting the web
+(Depending on your console color settings). This will also work in a browser console when targeting the web.
+
+### Installing
+
+`haxelib install console.hx`
 
 ### Formatting
 
@@ -72,10 +76,6 @@ This will print in your console something like:
 |     `<bg_light_magenta>`     |     Text background light magenta     |
 |      `<bg_light_cyan>`       |      Text background light cyan       |
 |      `<bg_light_white>`      |      Text background light white      |
-
-### Installing
-
-`haxelib install console.hx`
 
 ### Supported Targets
 
