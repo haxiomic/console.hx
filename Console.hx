@@ -50,15 +50,15 @@ class Console {
 		var printer = new haxe.macro.Printer();
 		var namedArgs = rest.map(e -> {
 			switch e.expr {
-				// print inline strings as just bold
-				case EConst(CString(str)):
-					return macro '<b><i>' + $e + '</i></b>';
+				case EConst(CInt(_) | CFloat(_)):
+					return macro '<cyan>' + $e + '</>';
+				case EConst(CString(_)):
+					return macro '<yellow>' + $e + '</>';
 				// print expression as a string as well as the expression value (in bold)
 				default:
 					var exprString = printer.printExpr(e);
-					return macro $v{exprString} + ': <b>' + $e + '</b>';
+					return macro '<b>' + $v{exprString} + ':</> <i,magenta>' + $e + '</>';
 			}
-			
 		});
 		return macro Console.log(${joinArgs(namedArgs)});
 	}
@@ -67,8 +67,8 @@ class Console {
 	macro static public function debug(rest:Array<Expr>){
 		if(!Context.getDefines().exists('debug')) return macro null;
 		rest = rest.map(removeMarkupMeta);
-		var pos = Context.currentPos();
-		return macro Console.printlnFormatted(Console.debugPrefix + '<magenta>${pos}:</magenta> ' + ${joinArgs(rest)}, Debug);
+		var pos = haxe.macro.PositionTools.toLocation(Context.currentPos());
+		return macro Console.printlnFormatted(Console.debugPrefix + '<magenta,b>${pos.file}:${pos.range.start.line}:</> ' + ${joinArgs(rest)}, Debug);
 	}
 
 	static public inline function printlnFormatted(s:String, outputStream:ConsoleOutputStream = Log){
@@ -257,7 +257,8 @@ class Console {
 		#end
 	}
 
-	static function getAsciiFormat(flag:FormatFlag):Null<String> {
+	// returns empty string for unhandled format
+	static function getAsciiFormat(flag:FormatFlag): String {
 		// custom hex color
 		if ((flag:String).charAt(0) == '#') {
 			var hex = (flag:String).substr(1);
@@ -316,7 +317,8 @@ class Console {
 			case BG_LIGHT_MAGENTA: '\033[48;5;' + ASCII_LIGHT_MAGENTA_CODE + 'm';
 			case BG_LIGHT_CYAN: '\033[48;5;' + ASCII_LIGHT_CYAN_CODE + 'm';
 			case BG_LIGHT_WHITE: '\033[48;5;' + ASCII_LIGHT_WHITE_CODE + 'm';
-			default: return null;
+			// return empty string when ascii format flag is not known
+			default: return '';
 		}
 	}
 
@@ -435,7 +437,8 @@ class Console {
 			case BG_LIGHT_MAGENTA: 'background-color: lightPink';
 			case BG_LIGHT_CYAN: 'background-color: lightCyan';
 			case BG_LIGHT_WHITE: 'background-color: white';
-			default: return null;
+			// return empty string for unknown format
+			default: return '';
 		}
 	}
 
@@ -642,7 +645,6 @@ abstract FormatFlag(String) to String {
 			return untyped normalized;
 		}
 
-
 		// handle aliases
 		return switch str {
 			case '/': RESET;
@@ -652,7 +654,7 @@ abstract FormatFlag(String) to String {
 			case 'i': ITALIC;
 			case 'gray': LIGHT_BLACK;
 			case 'bg_gray': BG_LIGHT_BLACK;
-			case transformed: untyped transformed;
+			default: cast str;
 		}
 	}
 }
