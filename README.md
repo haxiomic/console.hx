@@ -16,6 +16,63 @@ This will print in your console something like:
 
 `haxelib install console.hx`
 
+And add
+`-lib Console.hx` when compiling your haxe code
+
+### API
+
+#### `Console.log(...args)`
+
+`log()` prints all arguments to stdout. String type arguments will have \<tags> processed by the formatter. The log prefix can be configured by setting `Console.logPrefix`.
+
+**Example**
+
+`Console.log('<b>Hello</>', '<i>world</i>')`
+
+\> **Hello** *world*
+
+#### `Console.warn(...args)`
+
+`warn()` prints all arguments to stderr. String type arguments will have \<tags> processed by the formatter. The warn prefix can be configured by setting `Console.warnPrefix`.
+
+#### `Console.error(...args)`
+
+`error()` prints all arguments to stderr. String type arguments will have \<tags> processed by the formatter. By default, errors will be printed in red, the error prefix (including formatting) configured by setting `Console.errorPrefix`.
+
+#### `Console.success(...args)`
+
+`success()` prints all arguments to stdout. String type arguments will have \<tags> processed by the formatter. The success prefix can be configured by setting `Console.successPrefix`.
+
+#### `Console.debug(...args)`
+
+`debug()` output will only appear in the console when the haxe `-debug` flag is set and output is prefixed with the line number like `trace()`. String type arguments will have \<tags> processed by the formatter. The debug prefix can be configured by setting `Console.debugPrefix`.
+
+**Example**
+
+`Console.debug('hello', 'world')`
+
+\> **Main:5:** hello world
+
+#### `Console.examine(...args)`
+
+`examine()` prints variable names alongside their values
+
+**Example**
+```haxe
+var x = 31.1;
+var y = 65.3;
+Console.examine(x, y);
+```
+\> **x:** *32.1* **y:** *21.2*
+
+#### `Console.printlnFormatted( string: String, outputStream: Log | Warn | Error | Debug = Log)`
+
+Print a line to the console after processing \<tags> but without a log prefix
+
+#### `Console.println( string: String, outputStream: Log | Warn | Error | Debug = Log)`
+
+Print a line directly to the console without processing formatting \<tags>.
+
 ### Formatting
 
 - Apply formatting with HTML-like tags it: \<b>**bold**\</b> or \<i>*italic*\</i>
