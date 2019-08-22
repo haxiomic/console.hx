@@ -74,7 +74,7 @@ Print a line to the console after processing \<tags> but without a log prefix
 Print a line directly to the console without processing formatting \<tags>.
 
 ### Formatting
-O
+
 - Apply formatting with HTML-like tags it: \<b>**bold**\</b> or \<i>*italic*\</i>
 - Close the last tag with shorthand \</>: \<b>**bold**</> not bold
 - A double-closing tag like `<//>` will clear all active formatting
