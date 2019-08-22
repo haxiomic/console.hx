@@ -63,7 +63,7 @@ var x = 31.1;
 var y = 65.3;
 Console.examine(x, y);
 ```
-\> **x:** *32.1* **y:** *21.2*
+\> **x:** *32.1* **y:** *65.3*
 
 #### `Console.printlnFormatted( string: String, outputStream: Log | Warn | Error | Debug = Log)`
 
@@ -74,7 +74,7 @@ Print a line to the console after processing \<tags> but without a log prefix
 Print a line directly to the console without processing formatting \<tags>.
 
 ### Formatting
-
+O
 - Apply formatting with HTML-like tags it: \<b>**bold**\</b> or \<i>*italic*\</i>
 - Close the last tag with shorthand \</>: \<b>**bold**</> not bold
 - A double-closing tag like `<//>` will clear all active formatting
