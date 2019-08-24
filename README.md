@@ -3,9 +3,11 @@
 Console.hx is a haxe logging utility for easy rich output in both native and browser consoles via a familiar HTML-like tag syntax.
 
 For example:
-````haxe
+
+```haxe
 Console.log('<b>Don’t</> <red,u>Panic.</>');
-````
+```
+
 This will print in your console something like:
 
 ![don't-panic](https://user-images.githubusercontent.com/3742992/62642491-c160c900-b93d-11e9-94ef-a41358e0cf8c.png)
@@ -58,11 +60,13 @@ And add
 `examine()` prints variable names alongside their values
 
 **Example**
+
 ```haxe
 var x = 31.1;
 var y = 65.3;
 Console.examine(x, y);
 ```
+
 \> **x:** *32.1* **y:** *65.3*
 
 #### `Console.printlnFormatted( string: String, outputStream: Log | Warn | Error | Debug = Log)`
