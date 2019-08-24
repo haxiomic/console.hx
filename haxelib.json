@@ -2,10 +2,10 @@
   "name": "console.hx",
   "url": "https://github.com/haxiomic/console.hx",
   "license": "MIT",
-  "tags": [ "console", "colored", "print", "log" ],
+  "tags": [ "console", "colored", "print", "log", "terminal" ],
   "description": "Console.hx is a haxe logging utility for easy rich output in both native and browser consoles",
-  "version": "0.2.4",
-  "releasenote": "Enable merging tags and add macro Console.examine()",
+  "version": "0.2.6",
+  "releasenote": "Skip unknown tags and improve formatting of examine() and debug()",
   "contributors": ["haxiomic"],
   "dependencies": {}
 }
