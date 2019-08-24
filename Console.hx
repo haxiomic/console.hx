@@ -620,7 +620,7 @@ abstract FormatFlag(String) to String {
 	var BG_LIGHT_WHITE = 'bg_light_white';
 
 	@:from
-	static public inline function fromString(str:String) {
+	static public function fromString(str:String) {
 		str = str.toLowerCase();
 
 		// normalize hex colors
