@@ -1,7 +1,7 @@
 class RunTests {
 
 	static var builtDir = '_built';
-	static var commonFlags = '-lib console.hx -dce full';
+	static var commonFlags = '-lib console.hx -dce full -debug';
 
 	static function main(){
 		test('SampleTest');
@@ -57,9 +57,9 @@ class RunTests {
 		var exit = Sys.command('haxe -main $name $commonFlags -cpp $builtDir/cpp');
 		if (exit == 0) {
 			if (Sys.systemName() == 'Windows') {
-				Sys.command('$builtDir\\cpp\\$name');
+				Sys.command('$builtDir\\cpp\\$name-debug');
 			} else {
-				Sys.command('$builtDir/cpp/$name');
+				Sys.command('$builtDir/cpp/$name-debug');
 			}
 		}
 	}
