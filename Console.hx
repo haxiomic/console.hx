@@ -584,14 +584,14 @@ class Console {
 		#else
 		try {
 			var p = new sys.io.Process(cmd, args);
-			var exit = p.exitCode(true);
+			var exit = p.exitCode(); // assumed to block
 			var stdout = p.stdout.readAll().toString();
 			p.close();
 			return {
 				exit: exit,
 				stdout: stdout,
 			}
-		} catch (e:Any) {
+		} catch (e: Dynamic) {
 			return {
 				exit: 1,
 				stdout: ''
