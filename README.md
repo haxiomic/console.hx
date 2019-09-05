@@ -1,6 +1,6 @@
 <img src="https://user-images.githubusercontent.com/3742992/62642502-c58ce680-b93d-11e9-9f2a-47694086408e.png">
 
-Console.hx is a haxe logging utility for easy rich output in both native and browser consoles via a familiar HTML-like tag syntax.
+Console.hx is a haxe logging utility for easy rich output in both native and browser consoles via a familiar HTML-like tag syntax. Supports haxe 3 and haxe 4.
 
 For example:
 
@@ -12,7 +12,7 @@ This will print in your console something like:
 
 ![don't-panic](https://user-images.githubusercontent.com/3742992/62642491-c160c900-b93d-11e9-94ef-a41358e0cf8c.png)
 
-(Depending on your console color settings). This will also work in a browser console when targeting the web.
+(Depending on your console color settings). This will also work in a browser console when targeting the web. All console output can be disable by passing `-D no_console`.
 
 ### Installing
 

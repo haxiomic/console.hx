@@ -19,8 +19,9 @@ class Console {
 	static public var debugPrefix = '<b,magenta>><//> ';
 
 	// sometimes it's useful to intercept calls to print
-	// return false to prevent default print behavior
-	static public var printIntercept: Null<(str: String, outputStream: ConsoleOutputStream) -> Bool> = null;
+ 	// return false to prevent default print behavior
+	// (str: String, outputStream: ConsoleOutputStream) -> Bool
+	static public var printIntercept: Null<String -> ConsoleOutputStream -> Bool> = null;
 
 	static var argSeparator = ' ';
 	static var unicodeCompatibilityMode:UnicodeCompatibilityMode = #if (sys || nodejs) Sys.systemName() == 'Windows' ? Windows : #end None;
@@ -48,7 +49,7 @@ class Console {
 
 	macro static public function examine(rest:Array<Expr>) {
 		var printer = new haxe.macro.Printer();
-		var namedArgs = rest.map(e -> {
+		var namedArgs = rest.map(function(e) {
 			switch e.expr {
 				case EConst(CInt(_) | CFloat(_)):
 					return macro '<cyan>' + $e + '</>';
@@ -67,8 +68,23 @@ class Console {
 	macro static public function debug(rest:Array<Expr>){
 		if(!Context.getDefines().exists('debug')) return macro null;
 		rest = rest.map(removeMarkupMeta);
+		#if haxe4
 		var pos = haxe.macro.PositionTools.toLocation(Context.currentPos());
-		return macro Console.printlnFormatted(Console.debugPrefix + '<magenta,b>${pos.file}:${pos.range.start.line}:</> ' + ${joinArgs(rest)}, Debug);
+		var posString = '${pos.file}:${pos.range.start.line}';
+		#elseif haxe3
+		var pos = Context.currentPos();
+		var posString: String = '$pos';
+		// strip #pos( characters x-y)
+		var posPattern = ~/#pos\((.*)\)$/;
+		if (posPattern.match(posString)) {
+			posString = posPattern.matched(1);
+			var charactersPattern = ~/:\s*characters\s*[\d-]+$/;
+			if (charactersPattern.match(posString)) {
+				posString = charactersPattern.matchedLeft();
+			}
+		}
+		#end
+		return macro Console.printlnFormatted(Console.debugPrefix + '<magenta,b>$posString:</> ' + ${joinArgs(rest)}, Debug);
 	}
 
 	static public inline function printlnFormatted(s:String, outputStream:ConsoleOutputStream = Log){
@@ -185,12 +201,20 @@ class Console {
 							return '';
 						}
 					} else {
-						return getAsciiFormat(FormatFlag.RESET) + activeFormatFlagStack.map((f) -> getAsciiFormat(f)).filter((s) -> s != null).join('');
+						return 
+							getAsciiFormat(FormatFlag.RESET) +
+							activeFormatFlagStack.map(function(f) return getAsciiFormat(f))
+							.filter(function(s) return s != null)
+							.join('');
 					}
 				#end
 				#if js
 				case BrowserConsole:
-					browserFormatArguments.push(activeFormatFlagStack.map(function(f) return getBrowserFormat(f)).filter(function(s) return s != null).join(';'));
+					browserFormatArguments.push(
+						activeFormatFlagStack.map(function(f) return getBrowserFormat(f))
+						.filter(function(s) return s != null)
+						.join(';')
+					);
 					return '%c';
 				#end
 				case Disabled:
@@ -203,11 +227,21 @@ class Console {
 		if (formatMode == BrowserConsole) {
 			#if (!no_console)
 			var logArgs = [result].concat(browserFormatArguments);
+
+			#if haxe4
 			switch outputStream {
 				case Log, Debug: js.Syntax.code('console.log.apply(console, {0})', logArgs);
 				case Warn: js.Syntax.code('console.warn.apply(console, {0})', logArgs);
 				case Error: js.Syntax.code('console.error.apply(console, {0})', logArgs);
 			}
+			#elseif haxe3
+			switch outputStream {
+				case Log, Debug: untyped __js__('console.log.apply(console, {0})', logArgs);
+				case Warn: untyped __js__('console.warn.apply(console, {0})', logArgs);
+				case Error: untyped __js__('console.error.apply(console, {0})', logArgs);
+			}
+			#end
+
 			#end
 			return;
 		}
@@ -230,9 +264,10 @@ class Console {
 			}
 		}
 
+		#if (!no_console)
+
 		#if (sys || nodejs)
 
-		#if (!no_console)
 		// if we're running windows then enable unicode output while printing
 		if (unicodeCompatibilityMode == Windows && !unicodeCompatibilityEnabled) {
 			exec('chcp 65001');
@@ -245,16 +280,25 @@ class Console {
 			case Warn, Error:
 				Sys.stderr().writeString(s);
 		}
-		#end
 
 		#elseif js
 		// browser log
+		#if haxe4
 		switch outputStream {
 			case Log, Debug: js.Syntax.code('console.log({0})', s);
 			case Warn: js.Syntax.code('console.warn({0})', s);
 			case Error: js.Syntax.code('console.error({0})', s);
 		}
+		#elseif haxe3
+		switch outputStream {
+			case Log, Debug: untyped __js__('console.log({0})', s);
+			case Warn: untyped __js__('console.warn({0})', s);
+			case Error: untyped __js__('console.error({0})', s);
+		}
 		#end
+		#end
+
+		#end // #if (!no_console)
 	}
 
 	// returns empty string for unhandled format
@@ -447,10 +491,19 @@ class Console {
 
 		// browser console test
 		#if js
+
 		// if there's a window object, we're probably running in a browser
-		if (js.Syntax.typeof(js.Browser.window) != 'undefined'){
+		var hasWindowObject = 
+			#if haxe4
+			js.Syntax.typeof(js.Browser.window) != 'undefined';
+			#elseif haxe3
+			untyped __js__('typeof window !== "undefined"');
+			#end
+		
+		if (hasWindowObject){
 			return BrowserConsole;
 		}
+
 		#end
 
 		// native unix tput test
