@@ -109,23 +109,7 @@ class Console {
 	#end
 
 	static var formatTagPattern = ~/<(\/)?([^><{}\s]*|{[^}<>]*})>/g;
-
-	/**
-		# Parse formatted message and print to console
-		- Apply formatting with HTML-like tags: `<b>bold</b>`
-		- Tags are case-insensitive
-		- A closing tag without a tag name can be used to close the last-open format tag `</>` so `<b>bold</>` will also work
-		- A double-closing tag like `<//>` will clear all active formatting
-		- Multiple tags can be combined with comma separation, `<b,i>bold-italic</>`
-		- Whitespace is not allowed in tags, so `<b >` would be ignored and printed as-is
-		- Tags can be escaped with a leading backslash: `\<b>` would be printed as-is
-		- Unknown tags are skipped and will not show up in the output
-		- For browser targets, CSS fields and colors can be used, for example: `<{color: red; font-size: 20px}>Inline CSS</>` or `<#FF0000>Red Text</#FF0000>`. These will have no affect on native consoles
-	**/
-	#if (sys || nodejs)
-	public
-	#end
-	static function printFormatted(s:String, outputStream:ConsoleOutputStream = Log){
+	static function format(s: String, formatMode: ConsoleFormatMode) {
 		s = s + '<//>';// Add a reset all to the end to prevent overflowing formatting to subsequent lines
 
 		var activeFormatFlagStack = new Array<FormatFlag>();
@@ -224,11 +208,41 @@ class Console {
 			}
 		});
 
+		return {
+			formatted: result,
+			#if js
+			browserFormatArguments: browserFormatArguments,
+			#end
+		}
+	}
+
+	static public function stripFormatting(s: String) {
+		return format(s, Disabled).formatted;
+	}
+
+	/**
+		# Parse formatted message and print to console
+		- Apply formatting with HTML-like tags: `<b>bold</b>`
+		- Tags are case-insensitive
+		- A closing tag without a tag name can be used to close the last-open format tag `</>` so `<b>bold</>` will also work
+		- A double-closing tag like `<//>` will clear all active formatting
+		- Multiple tags can be combined with comma separation, `<b,i>bold-italic</>`
+		- Whitespace is not allowed in tags, so `<b >` would be ignored and printed as-is
+		- Tags can be escaped with a leading backslash: `\<b>` would be printed as-is
+		- Unknown tags are skipped and will not show up in the output
+		- For browser targets, CSS fields and colors can be used, for example: `<{color: red; font-size: 20px}>Inline CSS</>` or `<#FF0000>Red Text</#FF0000>`. These will have no affect on native consoles
+	**/
+	#if (sys || nodejs)
+	public
+	#end
+	static function printFormatted(s:String, outputStream:ConsoleOutputStream = Log){
+		var result = format(s, formatMode);
+
 		// for browser consoles we need to call console.log with formatting arguments
 		#if js
 		if (formatMode == BrowserConsole) {
 			#if (!no_console)
-			var logArgs = [result].concat(browserFormatArguments);
+			var logArgs = [result.formatted].concat(result.browserFormatArguments);
 
 			#if haxe4
 			switch outputStream {
@@ -250,7 +264,7 @@ class Console {
 		#end
 
 		// otherwise we can print with inline escape codes
-		print(result, outputStream);
+		print(result.formatted, outputStream);
 	}
 
 	#if (sys || nodejs)
