@@ -1,6 +1,8 @@
+#if macro
 import haxe.macro.Format;
 import haxe.macro.Context;
 import haxe.macro.Expr;
+#end
 
 // For windows consoles we have to enable formatting through kernel32 calls
 @:cppFileCode('
@@ -29,22 +31,22 @@ class Console {
 
 	macro static public function log(rest:Array<Expr>){
 		rest = rest.map(removeMarkupMeta);
-		return macro Console.printlnFormatted(Console.logPrefix + ${joinArgs(rest)}, Log);
+		return macro Console.printlnFormatted(Console.logPrefix + ${joinArgExprs(rest)}, Log);
 	}
 
 	macro static public function warn(rest:Array<Expr>){
 		rest = rest.map(removeMarkupMeta);
-		return macro Console.printlnFormatted(Console.warnPrefix + ${joinArgs(rest)}, Warn);
+		return macro Console.printlnFormatted(Console.warnPrefix + ${joinArgExprs(rest)}, Warn);
 	}
 
 	macro static public function error(rest:Array<Expr>){
 		rest = rest.map(removeMarkupMeta);
-		return macro Console.printlnFormatted(Console.errorPrefix + ${joinArgs(rest)}, Error);
+		return macro Console.printlnFormatted(Console.errorPrefix + ${joinArgExprs(rest)}, Error);
 	}
 
 	macro static public function success(rest:Array<Expr>){
 		rest = rest.map(removeMarkupMeta);
-		return macro Console.printlnFormatted(Console.successPrefix + ${joinArgs(rest)}, Log);
+		return macro Console.printlnFormatted(Console.successPrefix + ${joinArgExprs(rest)}, Log);
 	}
 
 	macro static public function examine(rest:Array<Expr>) {
@@ -61,7 +63,7 @@ class Console {
 					return macro '<b>' + $v{exprString} + ':</> <i,magenta>' + $e + '</>';
 			}
 		});
-		return macro Console.log(${joinArgs(namedArgs)});
+		return macro Console.log(${joinArgExprs(namedArgs)});
 	}
 
 	// Only generates log call if -debug build flag is supplied
@@ -84,7 +86,7 @@ class Console {
 			}
 		}
 		#end
-		return macro Console.printlnFormatted(Console.debugPrefix + '<magenta,b>$posString:</> ' + ${joinArgs(rest)}, Debug);
+		return macro Console.printlnFormatted(Console.debugPrefix + '<magenta,b>$posString:</> ' + ${joinArgExprs(rest)}, Debug);
 	}
 
 	static public inline function printlnFormatted(s:String, outputStream:ConsoleOutputStream = Log){
@@ -558,7 +560,8 @@ class Console {
 		return Disabled;
 	}
 
-	static function joinArgs(rest:Array<Expr>):ExprOf<String> {
+	#if macro
+	static function joinArgExprs(rest:Array<Expr>):ExprOf<String> {
 		var msg:Expr = macro '';
 		for(i in 0...rest.length){
 			var e = rest[i];
@@ -569,6 +572,7 @@ class Console {
 		}
 		return msg;
 	}
+	#end
 
 	#if (sys || nodejs)
 	static function exec(cmd: String, ?args:Array<String>) {
