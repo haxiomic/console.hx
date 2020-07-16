@@ -590,7 +590,7 @@ class Console {
 			var e = rest[i];
 			msg = macro $msg + Std.string(cast $e);
 			if (i != rest.length - 1){
-				msg = macro $msg + '$argSeparator';
+				msg = macro $msg + @:privateAccess Console.argSeparator;
 			}
 		}
 		return msg;
