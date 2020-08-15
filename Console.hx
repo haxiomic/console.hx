@@ -2,6 +2,7 @@
 import haxe.macro.Format;
 import haxe.macro.Context;
 import haxe.macro.Expr;
+import haxe.io.Path;
 #end
 
 // For windows consoles we have to enable formatting through kernel32 calls
@@ -88,6 +89,14 @@ class Console {
 		}
 		#end
 		return macro Console.printlnFormatted(Console.debugPrefix + '<magenta,b>$posString:</> ' + ${joinArgExprs(rest)}, Debug);
+	}
+
+	macro static function getAbsoluteNdllPath():ExprOf<String> {
+		var posInfo = Context.getPosInfos(Context.currentPos());
+		var repoDir = Path.directory(posInfo.file);
+		var path    = Path.join([ repoDir, 'ndll', 'Windows', 'wincon' ]);
+
+		return macro $v{ path };
 	}
 
 	static public inline function printlnFormatted(?s:String = '', outputStream:ConsoleOutputStream = Log){
@@ -562,7 +571,7 @@ class Console {
 		#elseif neko
 		if (Sys.systemName() == 'Windows') {
 			// try enabling virtual terminal emulation via wincon.ndll
-			var enableVTT:Void->Int = neko.Lib.load('wincon', 'enableVTT', 0);
+			var enableVTT:Void->Int = neko.Lib.load(getAbsoluteNdllPath(), 'enableVTT', 0);
 			if (enableVTT() != 0) {
 				// successfully enabled ascii escape codes in windows consoles
 				return AsciiTerminal;
