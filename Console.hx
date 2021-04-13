@@ -87,7 +87,7 @@ class Console {
 			}
 		}
 		#end
-		return macro Console.printlnFormatted(Console.debugPrefix + '<magenta,b>$posString:</> ' + ${joinArgExprs(rest)}, Debug);
+		return macro Console.printlnFormatted(Console.debugPrefix + '<magenta,b>' + $v{posString} + ':</> ' + ${joinArgExprs(rest)}, Debug);
 	}
 
 	static public inline function printlnFormatted(?s:String = '', outputStream:ConsoleOutputStream = Log){
