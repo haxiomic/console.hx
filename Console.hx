@@ -584,13 +584,14 @@ class Console {
 	}
 
 	#if macro
-	static function joinArgExprs(rest:Array<Expr>):ExprOf<String> {
+	static function joinArgs(rest:Array<Expr>):ExprOf<String> {
 		var msg:Expr = macro '';
+		var sepExpr: Expr = {expr: EConst(CString(argSeparator)), pos: haxe.macro.PositionTools.make({min: 0, max: 0, file: ""})};
 		for(i in 0...rest.length){
 			var e = rest[i];
-			msg = macro $msg + Std.string(cast $e);
+			msg = macro $msg + $e;
 			if (i != rest.length - 1){
-				msg = macro $msg + @:privateAccess Console.argSeparator;
+				msg = macro $msg + $sepExpr;
 			}
 		}
 		return msg;
