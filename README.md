@@ -79,7 +79,7 @@ Print a line directly to the console without processing formatting \<tags>.
 
 ### Formatting
 
-- Apply formatting with HTML-like tags it: \<b>**bold**\</b> or \<i>*italic*\</i>
+- Apply formatting with HTML-like tags: \<b>**bold**\</b> or \<i>*italic*\</i>
 - Close the last tag with shorthand \</>: \<b>**bold**</> not bold
 - A double-closing tag like `<//>` will clear all active formatting
 - Formatting can be combined into a single tag: \<b,i>***bold and italic***\</>
