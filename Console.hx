@@ -296,12 +296,17 @@ class Console {
 			unicodeCompatibilityEnabled = true;
 		}
 
+		#if (eval && haxe.issue_9359)
+			//https://github.com/HaxeFoundation/haxe/issues/9359
+			Sys.print(s);
+		#else
 		switch outputStream {
 			case Log, Debug:
 				Sys.stdout().writeString(s);
 			case Warn, Error:
 				Sys.stderr().writeString(s);
 		}
+		#end
 
 		#elseif js
 		// browser log
