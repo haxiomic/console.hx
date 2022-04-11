@@ -177,7 +177,6 @@ class Console {
 
 			// since format flags are cumulative, we only need to add the last item if it's an open tag
 			switch formatMode {
-				#if (sys || nodejs)
 				case AsciiTerminal:
 					// since format flags are cumulative, we only need to add the last item if it's an open tag
 					if (open) {
@@ -199,7 +198,6 @@ class Console {
 							.filter(function(s) return s != null)
 							.join('');
 					}
-				#end
 				#if js
 				case BrowserConsole:
 					browserFormatArguments.push(
@@ -529,6 +527,18 @@ class Console {
 		
 		if (hasWindowObject){
 			return BrowserConsole;
+		} else {
+			// check for tty in node.js
+			var isTTY = 
+				#if haxe4
+				js.Syntax.code('(typeof process !== "undefined") && (process?.stdout?.isTTY === true)');
+				#elseif haxe3
+				untyped __js__('(typeof process !== "undefined") && (process?.stdout?.isTTY === true)');
+				#end
+
+			if (isTTY) {
+				return AsciiTerminal;
+			}
 		}
 
 		#end
@@ -544,7 +554,7 @@ class Console {
 		}
 
 		// try checking if we can enable colors in windows
-		#if cpp
+			#if cpp
 		var winconVTEnabled = false;
 
 		untyped __cpp__('
@@ -564,7 +574,7 @@ class Console {
 			return AsciiTerminal;
 		}
 
-		#elseif neko
+			#elseif neko
 		if (Sys.systemName() == 'Windows') {
 			// try enabling virtual terminal emulation via wincon.ndll
 			var enableVTT:Void->Int = neko.Lib.load('wincon', 'enableVTT', 0);
@@ -573,7 +583,7 @@ class Console {
 				return AsciiTerminal;
 			}
 		}
-		#end // neko
+			#end // neko
 
 		// detect specific TERM environments
 		var termEnv = Sys.environment().get('TERM');
@@ -646,9 +656,7 @@ abstract ConsoleOutputStream(Int) {
 
 @:enum
 abstract ConsoleFormatMode(Int) {
-	#if (sys || nodejs)
 	var AsciiTerminal = 0;
-	#end
 	#if js
 	// Only enable browser console output on js targets
 	var BrowserConsole = 1;
