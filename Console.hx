@@ -192,7 +192,7 @@ class Console {
 							return '';
 						}
 					} else {
-						return 
+						return
 							getAsciiFormat(FormatFlag.RESET) +
 							activeFormatFlagStack.map(function(f) return getAsciiFormat(f))
 							.filter(function(s) return s != null)
@@ -518,18 +518,18 @@ class Console {
 		#if js
 
 		// if there's a window object, we're probably running in a browser
-		var hasWindowObject = 
+		var hasWindowObject =
 			#if haxe4
 			js.Syntax.typeof(js.Browser.window) != 'undefined';
 			#elseif haxe3
 			untyped __js__('typeof window !== "undefined"');
 			#end
-		
+
 		if (hasWindowObject){
 			return BrowserConsole;
 		} else {
 			// check for tty in node.js
-			var isTTY = 
+			var isTTY =
 				#if haxe4
 				js.Syntax.code('(typeof process !== "undefined") && (process?.stdout?.isTTY === true)');
 				#elseif haxe3
@@ -646,16 +646,14 @@ class Console {
 
 }
 
-@:enum
-abstract ConsoleOutputStream(Int) {
+enum abstract ConsoleOutputStream(Int) {
 	var Log = 0;
 	var Warn = 1;
 	var Error = 2;
 	var Debug = 3;
 }
 
-@:enum
-abstract ConsoleFormatMode(Int) {
+enum abstract ConsoleFormatMode(Int) {
 	var AsciiTerminal = 0;
 	#if js
 	// Only enable browser console output on js targets
@@ -664,14 +662,12 @@ abstract ConsoleFormatMode(Int) {
 	var Disabled = 2;
 }
 
-@:enum
-abstract UnicodeCompatibilityMode(Int) {
+enum abstract UnicodeCompatibilityMode(Int) {
 	var None = 0;
 	var Windows = 1;
 }
 
-@:enum
-abstract FormatFlag(String) to String {
+enum abstract FormatFlag(String) to String {
 	var RESET = 'reset';
 	var BOLD = 'bold';
 	var ITALIC = 'italic';
@@ -753,8 +749,7 @@ abstract FormatFlag(String) to String {
 	}
 }
 
-@:enum
-abstract AsciiColorCodes(Int){
+enum abstract AsciiColorCodes(Int){
 	var ASCII_BLACK_CODE = 0;
 	var ASCII_RED_CODE = 1;
 	var ASCII_GREEN_CODE = 2;
