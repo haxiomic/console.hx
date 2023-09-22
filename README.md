@@ -19,7 +19,7 @@ This will print in your console something like:
 `haxelib install console.hx`
 
 And add
-`-lib Console.hx` when compiling your haxe code
+`-lib console.hx` when compiling your haxe code
 
 ### API
 
