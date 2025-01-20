@@ -4,7 +4,7 @@
   "license": "MIT",
   "tags": [ "console", "colored", "print", "log", "terminal" ],
   "description": "Console.hx is a haxe logging utility for easy rich output in both native and browser consoles",
-  "version": "0.3.0",
+  "version": "0.3.1",
   "releasenote": "Check process.stdout.isTTY if not in a browser",
   "contributors": ["haxiomic"],
   "dependencies": {}
